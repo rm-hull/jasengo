@@ -11,7 +11,7 @@ import (
 // satisfies the given predicate function. It consumes the rune if successful.
 // The `desc` parameter is used for error reporting.
 func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
-	return func(st State) Result[rune] {
+	return func(st *State) Result[rune] {
 		r, size, ok := st.currentRune()
 		if !ok {
 			return failT[rune]("unexpected EOF ("+desc+")", st, false, false)
@@ -19,7 +19,7 @@ func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
 		if !pred(r) {
 			return failT[rune]("expected "+desc, st, false, false)
 		}
-		return success(r, *st.advanceRune(r, size), true)
+		return success(r, st.advanceRune(r, size), true)
 	}
 }
 
@@ -75,7 +75,7 @@ func Whitespace() Parser[[]rune] {
 // Return creates a parser that always succeeds without consuming any input,
 // and returns the given value `v`.
 func Return[T any](v T) Parser[T] {
-	return func(st State) Result[T] {
+	return func(st *State) Result[T] {
 		return success(v, st, false)
 	}
 }
@@ -83,7 +83,7 @@ func Return[T any](v T) Parser[T] {
 // StringP returns a parser that succeeds if the next input matches the
 // given string `s`. It consumes the matched string if successful.
 func StringP(s string) Parser[string] {
-	return func(st State) Result[string] {
+	return func(st *State) Result[string] {
 		if !strings.HasPrefix(st.Input[st.Loc.Index:], s) {
 			return failT[string]("expected "+strconv.Quote(s), st, false, false)
 		}
@@ -91,7 +91,7 @@ func StringP(s string) Parser[string] {
 		next := st
 		for _, r := range s {
 			_, size, _ := next.currentRune()
-			next = *next.advanceRune(r, size)
+			next = next.advanceRune(r, size)
 		}
 		consumed := len(s) > 0
 		return success(s, next, consumed)
@@ -101,7 +101,7 @@ func StringP(s string) Parser[string] {
 // EOF returns a parser that succeeds only if the end of the input
 // has been reached. It does not consume any input.
 func EOF() Parser[struct{}] {
-	return func(st State) Result[struct{}] {
+	return func(st *State) Result[struct{}] {
 		if st.Loc.Index >= len(st.Input) {
 			return success(struct{}{}, st, false)
 		}
@@ -115,7 +115,7 @@ func EOF() Parser[struct{}] {
 // Fail returns a parser that always fails with the given message.
 // It does not consume any input.
 func Fail[T any](msg string) Parser[T] {
-	return func(st State) Result[T] {
+	return func(st *State) Result[T] {
 		return failT[T](msg, st, false, false)
 	}
 }

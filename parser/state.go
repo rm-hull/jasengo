@@ -20,8 +20,8 @@ type State struct {
 	Loc   Location
 }
 
-func NewState(s string) State {
-	return State{
+func NewState(s string) *State {
+	return &State{
 		Input: s,
 		Loc:   Location{Index: 0, Line: 1, Col: 1},
 	}
