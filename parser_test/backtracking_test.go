@@ -1,4 +1,4 @@
-package parser_test
+package parser
 
 import (
 	"testing"
@@ -12,26 +12,26 @@ func runFull[T any](p parser.Parser[T], input string) parser.Result[T] {
 	return p(parser.NewState(input))
 }
 
-// func TestAttemptAllowsBacktracking(t *testing.T) {
-// 	ab := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[string] {
-// 		return parser.Map(parser.Char('b'), func(_ rune) string { return "ab" })
-// 	})
+func TestAttemptAllowsBacktracking2(t *testing.T) {
+	ab := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[string] {
+		return parser.Map(parser.Char('b'), func(_ rune) string { return "ab" })
+	})
 
-// 	p := parser.Choice(
-// 		parser.Attempt(ab),
-// 		parser.Map(parser.Char('a'), func(_ rune) string { return "a" }),
-// 	)
+	p := parser.Choice(
+		parser.Attempt(ab),
+		parser.Map(parser.Char('a'), func(_ rune) string { return "a" }),
+	)
 
-// 	r := runFull(p, "aX")
+	r := runFull(p, "aX")
 
-// 	// Choice succeeds with the second alternative "a"
-// 	assert.Nil(t, r.Err)
-// 	assert.Equal(t, "a", r.Value)
+	// Choice succeeds with the second alternative "a"
+	assert.Nil(t, r.Err)
+	assert.Equal(t, "a", r.Value)
 
-// 	// The final result consumed the 'a' that matched the second alt.
-// 	// Attempt must have reset consumption for the first branch.
-// 	assert.True(t, r.Consumed)
-// }
+	// The final result consumed the 'a' that matched the second alt.
+	// Attempt must have reset consumption for the first branch.
+	assert.True(t, r.Consumed)
+}
 
 func TestAttemptDoesNotRollbackFatalErrors(t *testing.T) {
 	p := parser.Attempt(
@@ -185,19 +185,19 @@ func TestAttemptInsideCommitStillFatal(t *testing.T) {
 	assert.False(t, r.Consumed)
 }
 
-// func TestChoiceWithCommitAtSecondAlternative(t *testing.T) {
-// 	a := parser.Char('a')
-// 	bc := parser.Commit(parser.StringP("bc"))
+func TestChoiceWithCommitAtSecondAlternative(t *testing.T) {
+	a := parser.Map(parser.Char('a'), func(r rune) string { return string(r) })
+	bc := parser.Commit(parser.StringP("bc"))
 
-// 	p := parser.Choice(a, bc)
+	p := parser.Choice(a, bc)
 
-// 	r := runFull(p, "bd")
+	r := runFull(p, "bd")
 
-// 	assert.NotNil(t, r.Err)
-// 	assert.True(t, r.Err.Fatal)
-// 	// the commit on second alternative fails immediately (no consumption)
-// 	assert.False(t, r.Consumed)
-// }
+	assert.NotNil(t, r.Err)
+	assert.True(t, r.Err.Fatal)
+	// the commit on second alternative fails immediately (no consumption)
+	assert.False(t, r.Consumed)
+}
 
 func TestChoiceWithAttemptBeforeCommit(t *testing.T) {
 	p := parser.Choice(
@@ -212,26 +212,26 @@ func TestChoiceWithAttemptBeforeCommit(t *testing.T) {
 	assert.True(t, r.Consumed)
 }
 
-// func TestBacktrackingOnMultipleLevels(t *testing.T) {
-// 	part1 := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[rune] {
-// 		return parser.Char('x')
-// 	})
+func TestBacktrackingOnMultipleLevels(t *testing.T) {
+	part1 := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[string] {
+		return parser.Map(parser.Char('x'), func(_ rune) string { return "ax" })
+	})
 
-// 	part2 := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[string] {
-// 		return parser.Map(parser.Char('y'), func(_ rune) string { return "ay" })
-// 	})
+	part2 := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[string] {
+		return parser.Map(parser.Char('y'), func(_ rune) string { return "ay" })
+	})
 
-// 	p := parser.Choice(
-// 		parser.Attempt(part1),
-// 		part2,
-// 	)
+	p := parser.Choice(
+		parser.Attempt(part1),
+		part2,
+	)
 
-// 	r := runFull(p, "ayZ")
+	r := runFull(p, "ayZ")
 
-// 	assert.Nil(t, r.Err)
-// 	assert.Equal(t, "ay", r.Value)
-// 	assert.True(t, r.Consumed)
-// }
+	assert.Nil(t, r.Err)
+	assert.Equal(t, "ay", r.Value)
+	assert.True(t, r.Consumed)
+}
 
 func TestCommitAtTopLevelPreventsFallback(t *testing.T) {
 	p1 := parser.Commit(parser.StringP("hello"))
