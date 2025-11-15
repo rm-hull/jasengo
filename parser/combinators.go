@@ -256,21 +256,46 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 // `ChainL` associates the operations to the left.
 // For example, `p op p op p` would be parsed as `((v1 op v2) op v3)`.
 func ChainL[A any](p Parser[A], op Parser[func(A, A) A]) Parser[A] {
-	return Bind(p, func(a A) Parser[A] {
-		return Map(Many(Bind(op, func(f func(A, A) A) Parser[func(A) A] {
-			return Map(p, func(b A) func(A) A {
-				return func(acc A) A {
-					return f(acc, b)
+	return func(st State) Result[A] {
+		res := p(st)
+		if res.Err != nil {
+			return res
+		}
+
+		acc := res.Value
+		cur := res.State
+		consumed := res.Consumed
+
+		for {
+			opRes := op(cur)
+			if opRes.Err != nil {
+				if opRes.Err.Fatal || opRes.Consumed {
+					return Result[A]{
+						Err:      opRes.Err,
+						State:    opRes.State,
+						Consumed: consumed || opRes.Consumed,
+					}
 				}
-			})
-		})), func(fns []func(A) A) A {
-			result := a
-			for _, fn := range fns {
-				result = fn(result)
+				return success(acc, cur, consumed)
 			}
-			return result
-		})
-	})
+
+			pRes := p(opRes.State)
+			if pRes.Err != nil {
+				// If op succeeded, we must find a value, otherwise it's a syntax error.
+				err := *pRes.Err
+				err.Fatal = true
+				return Result[A]{
+					Err:      &err,
+					State:    pRes.State,
+					Consumed: consumed || opRes.Consumed || pRes.Consumed,
+				}
+			}
+
+			acc = opRes.Value(acc, pRes.Value)
+			cur = pRes.State
+			consumed = true
+		}
+	}
 }
 
 // ChainR applies a value parser `p` one or more times, separated by an operator parser `op`.
