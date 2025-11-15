@@ -250,3 +250,69 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 		}
 	}
 }
+
+// ChainL applies a value parser `p` one or more times, separated by an operator parser `op`.
+// The operator parser `op` should return a function that combines two values of type `A`.
+// `ChainL` associates the operations to the left.
+// For example, `p op p op p` would be parsed as `((v1 op v2) op v3)`.
+func ChainL[A any](p Parser[A], op Parser[func(A, A) A]) Parser[A] {
+	return func(st State) Result[A] {
+		res := p(st)
+		if res.Err != nil {
+			return res
+		}
+
+		acc := res.Value
+		cur := res.State
+		consumed := res.Consumed
+
+		for {
+			opRes := op(cur)
+			if opRes.Err != nil {
+				if opRes.Err.Fatal || opRes.Consumed {
+					return Result[A]{
+						Err:      opRes.Err,
+						State:    opRes.State,
+						Consumed: consumed || opRes.Consumed,
+					}
+				}
+				return success(acc, cur, consumed)
+			}
+
+			pRes := p(opRes.State)
+			if pRes.Err != nil {
+				// If op succeeded, we must find a value, otherwise it's a syntax error.
+				err := *pRes.Err
+				err.Fatal = true
+				return Result[A]{
+					Err:      &err,
+					State:    pRes.State,
+					Consumed: consumed || opRes.Consumed || pRes.Consumed,
+				}
+			}
+
+			acc = opRes.Value(acc, pRes.Value)
+			cur = pRes.State
+			consumed = true
+		}
+	}
+}
+
+// ChainR applies a value parser `p` one or more times, separated by an operator parser `op`.
+// The operator parser `op` should return a function that combines two values of type `A`.
+// `ChainR` associates the operations to the right.
+// For example, `p op p op p` would be parsed as `(v1 op (v2 op v3))`.
+func ChainR[A any](p Parser[A], op Parser[func(A, A) A]) Parser[A] {
+	var pChainR Parser[A]
+	pChainR = Bind(p, func(x A) Parser[A] {
+		return Choice(
+			Bind(op, func(f func(A, A) A) Parser[A] {
+				return Map(Rec(&pChainR), func(y A) A {
+					return f(x, y)
+				})
+			}),
+			Return(x),
+		)
+	})
+	return pChainR
+}
