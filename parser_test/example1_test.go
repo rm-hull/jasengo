@@ -16,7 +16,7 @@ import (
 //    searchTerm ::= [NOT] ( singleWord | quotedString | '(' searchExpr ')' )
 
 func buildExprParser(term parser.Parser[ast.Node], op string) parser.Parser[ast.Node] {
-	opParser := parser.Right(parser.Symb(op), term)
+	opParser := parser.Right(parser.Symbol(op), term)
 	return parser.Bind(term, func(first ast.Node) parser.Parser[ast.Node] {
 		return parser.Map(parser.Many(opParser), func(rest []ast.Node) ast.Node {
 			if len(rest) == 0 {
@@ -42,21 +42,21 @@ func TestWorkedExample1(t *testing.T) {
 
 	quotedString := parser.Map(
 		parser.Between(
-			parser.Symb(`"`),
+			parser.Symbol(`"`),
 			parser.Many1(parser.Choice(alphaNum, parser.Char(' '))),
-			parser.Symb(`"`),
+			parser.Symbol(`"`),
 		),
 		func(v []rune) string { return string(v) },
 	)
 
 	bracketedExpr := parser.Between(
-		parser.Symb("("),
+		parser.Symbol("("),
 		parser.Token(parser.Rec(&searchExpr)),
-		parser.Symb(")"),
+		parser.Symbol(")"),
 	)
 
 	searchTerm := parser.Bind(
-		parser.Optional(parser.Symb("not")),
+		parser.Optional(parser.Symbol("not")),
 		func(not *string) parser.Parser[ast.Node] {
 			return parser.Bind(
 				parser.Choice(

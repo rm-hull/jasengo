@@ -22,7 +22,7 @@ func Between[A any, B any, C any](pA Parser[A], pB Parser[B], pC Parser[C]) Pars
 	return Right(pA, Left(pB, pC))
 }
 
-func Symb(s string) Parser[string] {
+func Symbol(s string) Parser[string] {
 	return Token(StringP(s))
 }
 
