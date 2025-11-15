@@ -4,9 +4,9 @@ func Map[A any, B any](p Parser[A], f func(A) B) Parser[B] {
 	return func(st State) Result[B] {
 		r := p(st)
 		if r.Err != nil {
-			return Result[B]{Err: r.Err, State: r.State}
+			return Result[B]{Err: r.Err, State: r.State, Consumed: r.Consumed}
 		}
-		return success[B](f(r.Value), r.State, true)
+		return success[B](f(r.Value), r.State, r.Consumed)
 	}
 }
 
