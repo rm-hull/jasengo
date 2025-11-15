@@ -57,7 +57,7 @@ func StringP(s string) Parser[string] {
 func EOF() Parser[struct{}] {
 	return func(st State) Result[struct{}] {
 		if len(st.Input) == 0 {
-			return success(struct{}{}, st, true)
+			return success(struct{}{}, st, false)
 		}
 		// The EOF parser should not report that it has consumed input,
 		// as it only checks for the end of the input without advancing
