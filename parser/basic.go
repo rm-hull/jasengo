@@ -1,0 +1,63 @@
+package parser
+
+import (
+	"fmt"
+	"strconv"
+	"unicode"
+)
+
+func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
+	return func(st State) Result[rune] {
+		r, size, ok := st.currentRune()
+		if !ok {
+			return failT[rune]("unexpected EOF ("+desc+")", st, false)
+		}
+		if !pred(r) {
+			return failT[rune]("expected "+desc, st, false)
+		}
+		return success[rune](r, st.advanceRune(r, size))
+	}
+}
+
+func Char(c rune) Parser[rune] {
+	return Satisfy(func(r rune) bool { return r == c }, fmt.Sprintf("%q", c))
+}
+
+func OneOf(chars string) Parser[rune] {
+	set := map[rune]struct{}{}
+	for _, r := range chars {
+		set[r] = struct{}{}
+	}
+	return Satisfy(func(r rune) bool {
+		_, ok := set[r]
+		return ok
+	}, "one of "+chars)
+}
+
+func Digit() Parser[rune] {
+	return Satisfy(unicode.IsDigit, "digit")
+}
+
+func StringP(s string) Parser[string] {
+	return func(st State) Result[string] {
+		if len(st.Input) < len(s) || st.Input[:len(s)] != s {
+			return failT[string]("expected "+strconv.Quote(s), st, false)
+		}
+
+		next := st
+		for _, r := range s {
+			_, size, _ := next.currentRune()
+			next = next.advanceRune(r, size)
+		}
+		return success[string](s, next)
+	}
+}
+
+func EOF() Parser[struct{}] {
+	return func(st State) Result[struct{}] {
+		if len(st.Input) == 0 {
+			return success(struct{}{}, st)
+		}
+		return failT[struct{}]("expected EOF", st, false)
+	}
+}
