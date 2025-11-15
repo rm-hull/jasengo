@@ -49,7 +49,8 @@ func StringP(s string) Parser[string] {
 			_, size, _ := next.currentRune()
 			next = next.advanceRune(r, size)
 		}
-		return success[string](s, next, true)
+		consumed := len(s) > 0
+		return success[string](s, next, consumed)
 	}
 }
 
@@ -58,6 +59,9 @@ func EOF() Parser[struct{}] {
 		if len(st.Input) == 0 {
 			return success(struct{}{}, st, true)
 		}
+		// The EOF parser should not report that it has consumed input,
+		// as it only checks for the end of the input without advancing
+		// the parser state
 		return failT[struct{}]("expected EOF", st, false, false)
 	}
 }

@@ -49,7 +49,7 @@ func Commit[T any](p Parser[T]) Parser[T] {
 		if r.Err != nil {
 			pe := *r.Err
 			pe.Fatal = true
-			return Result[T]{Err: &pe, State: r.State}
+			return Result[T]{Err: &pe, State: r.State, Consumed: r.Consumed}
 		}
 		return r
 	}
