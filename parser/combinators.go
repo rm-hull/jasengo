@@ -127,32 +127,36 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 	return func(st State) Result[[]T] {
 		r := p(st)
 		if r.Err != nil {
-			if r.Err.Fatal {
-				return Result[[]T]{Err: r.Err, State: r.State}
+			if r.Err.Fatal || r.Consumed {
+				return Result[[]T]{Err: r.Err, State: r.State, Consumed: r.Consumed}
 			}
-			return success([]T{}, st, true)
+			return success([]T{}, st, false)
 		}
 
 		out := []T{r.Value}
 		cur := r.State
+		consumed := r.Consumed
 
 		for {
-			rs := sep(cur)
-			if rs.Err != nil {
-				if rs.Err.Fatal {
-					return Result[[]T]{Err: rs.Err, State: rs.State}
+			sepResult := sep(cur)
+			if sepResult.Err != nil {
+				if sepResult.Err.Fatal || sepResult.Consumed {
+					return Result[[]T]{Err: sepResult.Err, State: sepResult.State, Consumed: consumed || sepResult.Consumed}
 				}
-				return success(out, cur, true)
+				return success(out, cur, consumed)
 			}
-			rn := p(rs.State)
-			if rn.Err != nil {
-				if rn.Err.Fatal {
-					return Result[[]T]{Err: rn.Err, State: rn.State}
+
+			pResult := p(sepResult.State)
+			if pResult.Err != nil {
+				if pResult.Err.Fatal || pResult.Consumed {
+					return Result[[]T]{Err: pResult.Err, State: pResult.State, Consumed: consumed || sepResult.Consumed || pResult.Consumed}
 				}
-				return success(out, cur, true)
+				return success(out, cur, consumed)
 			}
-			out = append(out, rn.Value)
-			cur = rn.State
+
+			out = append(out, pResult.Value)
+			cur = pResult.State
+			consumed = consumed || sepResult.Consumed || pResult.Consumed
 		}
 	}
 }
