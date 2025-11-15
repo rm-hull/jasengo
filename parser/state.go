@@ -12,12 +12,7 @@ type Location struct {
 }
 
 func (l Location) String() string {
-	return "line " + itoa(l.Line) + " col " + itoa(l.Col)
-}
-
-// small int → string helper (zero alloc)
-func itoa(n int) string {
-	return strconv.Itoa(n)
+	return "line " + strconv.Itoa(l.Line) + " col " + strconv.Itoa(l.Col)
 }
 
 type State struct {
