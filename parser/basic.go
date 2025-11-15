@@ -7,6 +7,9 @@ import (
 	"unicode"
 )
 
+// Satisfy returns a parser that succeeds if the next rune in the input
+// satisfies the given predicate function. It consumes the rune if successful.
+// The `desc` parameter is used for error reporting.
 func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
 	return func(st State) Result[rune] {
 		r, size, ok := st.currentRune()
@@ -20,10 +23,14 @@ func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
 	}
 }
 
+// Char returns a parser that succeeds if the next rune in the input
+// is equal to the given character `c`. It consumes the rune if successful.
 func Char(c rune) Parser[rune] {
 	return Satisfy(func(r rune) bool { return r == c }, fmt.Sprintf("%q", c))
 }
 
+// OneOf returns a parser that succeeds if the next rune in the input
+// is one of the characters in the provided string `chars`. It consumes the rune if successful.
 func OneOf(chars string) Parser[rune] {
 	set := map[rune]struct{}{}
 	for _, r := range chars {
@@ -35,28 +42,40 @@ func OneOf(chars string) Parser[rune] {
 	}, "one of "+chars)
 }
 
+// Digit returns a parser that succeeds if the next rune in the input
+// is a digit. It consumes the rune if successful.
 func Digit() Parser[rune] {
 	return Satisfy(unicode.IsDigit, "digit")
 }
 
+// Lower returns a parser that succeeds if the next rune in the input
+// is a lowercase letter. It consumes the rune if successful.
 func Lower() Parser[rune] {
 	return Satisfy(unicode.IsLower, "lowercase letter")
 }
 
+// Upper returns a parser that succeeds if the next rune in the input
+// is an uppercase letter. It consumes the rune if successful.
 func Upper() Parser[rune] {
 	return Satisfy(unicode.IsUpper, "uppercase letter")
 }
 
+// Whitespace returns a parser that matches zero or more whitespace characters
+// (space, tab, newline, carriage return). It returns the matched runes.
 func Whitespace() Parser[[]rune] {
 	return Many(OneOf(" \t\n\r"))
 }
 
+// Return creates a parser that always succeeds without consuming any input,
+// and returns the given value `v`.
 func Return[T any](v T) Parser[T] {
 	return func(st State) Result[T] {
 		return success(v, st, false)
 	}
 }
 
+// StringP returns a parser that succeeds if the next input matches the
+// given string `s`. It consumes the matched string if successful.
 func StringP(s string) Parser[string] {
 	return func(st State) Result[string] {
 		if !strings.HasPrefix(st.Input[st.Loc.Index:], s) {
@@ -73,6 +92,8 @@ func StringP(s string) Parser[string] {
 	}
 }
 
+// EOF returns a parser that succeeds only if the end of the input
+// has been reached. It does not consume any input.
 func EOF() Parser[struct{}] {
 	return func(st State) Result[struct{}] {
 		if st.Loc.Index >= len(st.Input) {

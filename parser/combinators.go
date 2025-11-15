@@ -1,15 +1,20 @@
 package parser
 
+// Token returns a parser that parses `p` and then consumes any trailing whitespace.
 func Token[T any](p Parser[T]) Parser[T] {
 	return Left(p, Whitespace())
 }
 
+// Right returns a parser that runs parser `pA`, then parser `pB`,
+// but only returns the result of `pB`.
 func Right[A any, B any](pA Parser[A], pB Parser[B]) Parser[B] {
 	return Bind(pA, func(_ A) Parser[B] {
 		return pB
 	})
 }
 
+// Left returns a parser that runs parser `pA`, then parser `pB`,
+// but only returns the result of `pA`.
 func Left[A any, B any](pA Parser[A], pB Parser[B]) Parser[A] {
 	return Bind(pA, func(a A) Parser[A] {
 		return Map(pB, func(_ B) A {
@@ -18,20 +23,31 @@ func Left[A any, B any](pA Parser[A], pB Parser[B]) Parser[A] {
 	})
 }
 
+// Between returns a parser that runs parser `pA`, then `pB`, then `pC`,
+// but only returns the result of `pB`. This is useful for parsing
+// expressions enclosed in delimiters, e.g., parentheses.
 func Between[A any, B any, C any](pA Parser[A], pB Parser[B], pC Parser[C]) Parser[B] {
 	return Right(pA, Left(pB, pC))
 }
 
+// Symbol returns a parser that parses the given string `s` and
+// consumes any trailing whitespace.
 func Symbol(s string) Parser[string] {
 	return Token(StringP(s))
 }
 
+// Rec creates a parser that allows for recursive parser definitions.
+// It takes a pointer to a Parser and defers its evaluation,
+// enabling the construction of parsers for recursive grammars.
 func Rec[T any](p *Parser[T]) Parser[T] {
 	return func(st State) Result[T] {
 		return (*p)(st)
 	}
 }
 
+// Map transforms the successful result of parser `p` using the function `f`.
+// If `p` succeeds with a value of type `A`, `f` is applied to that value
+// to produce a new value of type `B`.
 func Map[A any, B any](p Parser[A], f func(A) B) Parser[B] {
 	return func(st State) Result[B] {
 		r := p(st)
@@ -42,6 +58,10 @@ func Map[A any, B any](p Parser[A], f func(A) B) Parser[B] {
 	}
 }
 
+// Bind (also known as `AndThen` or `>>=`) sequences two parsers.
+// It runs parser `p`, and if successful, it passes the result to function `f`
+// which returns a new parser. This new parser is then run with the
+// remaining input.
 func Bind[A any, B any](p Parser[A], f func(A) Parser[B]) Parser[B] {
 	return func(st State) Result[B] {
 		r := p(st)
@@ -57,6 +77,11 @@ func Bind[A any, B any](p Parser[A], f func(A) Parser[B]) Parser[B] {
 	}
 }
 
+// Attempt tries to apply parser `p`. If `p` fails after consuming
+// some input, Attempt backtracks the state to before `p` was applied.
+// This is useful for implementing alternatives where the first parser
+// might consume input before failing, preventing subsequent alternatives
+// from being tried.
 func Attempt[T any](p Parser[T]) Parser[T] {
 	return func(st State) Result[T] {
 		r := p(st)
@@ -75,6 +100,11 @@ func Attempt[T any](p Parser[T]) Parser[T] {
 	}
 }
 
+// Commit tries to apply parser `p`. If `p` fails, it converts any
+// non-fatal error into a fatal error, preventing backtracking.
+// This is useful for "committing" to a parse path once a certain
+// point is reached, improving error reporting by pinpointing the
+// exact location of a syntax error.
 func Commit[T any](p Parser[T]) Parser[T] {
 	return func(st State) Result[T] {
 		r := p(st)
@@ -87,6 +117,10 @@ func Commit[T any](p Parser[T]) Parser[T] {
 	}
 }
 
+// Choice tries to apply a list of parsers `ps` in order.
+// It returns the result of the first parser that succeeds.
+// If all parsers fail, it returns the best error encountered (the one
+// furthest into the input, or a fatal error if one occurred).
 func Choice[T any](ps ...Parser[T]) Parser[T] {
 	return func(st State) Result[T] {
 		var best *ParseError
@@ -104,6 +138,9 @@ func Choice[T any](ps ...Parser[T]) Parser[T] {
 	}
 }
 
+// Many repeatedly applies parser `p` zero or more times.
+// It collects all successful results into a slice.
+// It always succeeds, returning an empty slice if `p` never succeeds.
 func Many[T any](p Parser[T]) Parser[[]T] {
 	return func(st State) Result[[]T] {
 		var out []T
@@ -127,6 +164,9 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 	}
 }
 
+// Many1 repeatedly applies parser `p` one or more times.
+// It collects all successful results into a slice.
+// It fails if `p` does not succeed at least once.
 func Many1[T any](p Parser[T]) Parser[[]T] {
 	return func(st State) Result[[]T] {
 		r := Many(p)(st)
@@ -140,6 +180,10 @@ func Many1[T any](p Parser[T]) Parser[[]T] {
 	}
 }
 
+// Optional tries to apply parser `p`. If `p` succeeds, it returns
+// the result wrapped in a pointer. If `p` fails without consuming
+// input, it succeeds and returns `nil`. If `p` fails after consuming
+// input, or with a fatal error, Optional fails.
 func Optional[T any](p Parser[T]) Parser[*T] {
 	return func(st State) Result[*T] {
 		r := p(st)
@@ -155,6 +199,9 @@ func Optional[T any](p Parser[T]) Parser[*T] {
 	}
 }
 
+// SepBy1 applies parser `p` one or more times, separated by parser `sep`.
+// It returns a slice of the results of `p`.
+// It fails if `p` does not succeed at least once.
 func SepBy1[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 	return Bind(p, func(first T) Parser[[]T] {
 		return Map(Many(Right(sep, p)), func(rest []T) []T {
@@ -163,6 +210,9 @@ func SepBy1[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 	})
 }
 
+// SepBy applies parser `p` zero or more times, separated by parser `sep`.
+// It returns a slice of the results of `p`.
+// It always succeeds, returning an empty slice if `p` never succeeds.
 func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 	return func(st State) Result[[]T] {
 		r := p(st)
