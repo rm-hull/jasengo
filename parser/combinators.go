@@ -1,5 +1,37 @@
 package parser
 
+func Token[T any](p Parser[T]) Parser[T] {
+	return Left(p, Whitespace())
+}
+
+func Right[A any, B any](pA Parser[A], pB Parser[B]) Parser[B] {
+	return Bind(pA, func(_ A) Parser[B] {
+		return pB
+	})
+}
+
+func Left[A any, B any](pA Parser[A], pB Parser[B]) Parser[A] {
+	return Bind(pA, func(a A) Parser[A] {
+		return Map(pB, func(_ B) A {
+			return a
+		})
+	})
+}
+
+func Between[A any, B any, C any](pA Parser[A], pB Parser[B], pC Parser[C]) Parser[B] {
+	return Right(pA, Left(pB, pC))
+}
+
+func Symb(s string) Parser[string] {
+	return Token(StringP(s))
+}
+
+func Rec[T any](p *Parser[T]) Parser[T] {
+	return func(st State) Result[T] {
+		return (*p)(st)
+	}
+}
+
 func Map[A any, B any](p Parser[A], f func(A) B) Parser[B] {
 	return func(st State) Result[B] {
 		r := p(st)
@@ -121,6 +153,14 @@ func Optional[T any](p Parser[T]) Parser[*T] {
 		*v = r.Value
 		return success(v, r.State, r.Consumed)
 	}
+}
+
+func SepBy1[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
+	return Bind(p, func(first T) Parser[[]T] {
+		return Map(Many(Right(sep, p)), func(rest []T) []T {
+			return append([]T{first}, rest...)
+		})
+	})
 }
 
 func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
