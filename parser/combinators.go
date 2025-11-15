@@ -303,31 +303,16 @@ func ChainL[A any](p Parser[A], op Parser[func(A, A) A]) Parser[A] {
 // `ChainR` associates the operations to the right.
 // For example, `p op p op p` would be parsed as `(v1 op (v2 op v3))`.
 func ChainR[A any](p Parser[A], op Parser[func(A, A) A]) Parser[A] {
-	return Bind(Many(Bind(p, func(a A) Parser[struct {
-		Val A
-		Op  func(A, A) A
-	}] {
-		return Map(op, func(f func(A, A) A) struct {
-			Val A
-			Op  func(A, A) A
-		} {
-			return struct {
-				Val A
-				Op  func(A, A) A
-			}{Val: a, Op: f}
-		})
-	})), func(scannedPairs []struct {
-		Val A
-		Op  func(A, A) A
-	}) Parser[A] {
-		return Bind(p, func(lastVal A) Parser[A] {
-			result := lastVal
-			// Iterate in reverse
-			for i := len(scannedPairs) - 1; i >= 0; i-- {
-				pair := scannedPairs[i]
-				result = pair.Op(pair.Val, result)
-			}
-			return Return(result)
-		})
+	var pChainR Parser[A]
+	pChainR = Bind(p, func(x A) Parser[A] {
+		return Choice(
+			Bind(op, func(f func(A, A) A) Parser[A] {
+				return Map(Rec(&pChainR), func(y A) A {
+					return f(x, y)
+				})
+			}),
+			Return(x),
+		)
 	})
+	return pChainR
 }
