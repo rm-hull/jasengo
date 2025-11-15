@@ -39,8 +39,8 @@ func TestWorkedExample1(t *testing.T) {
 		func(not *string) parser.Parser[any] {
 			return parser.Bind(
 				parser.Choice(
-					parser.Bind(singleWord, func(v []rune) parser.Parser[any] { return parser.Return[any](string(v)) }),
-					parser.Bind(quotedString, func(v []rune) parser.Parser[any] { return parser.Return[any](string(v)) }),
+parser.Map(singleWord, func(v []rune) any { return string(v) }),
+parser.Map(quotedString, func(v []rune) any { return string(v) }),
 					bracketedExpr,
 				),
 				func(term any) parser.Parser[any] {
