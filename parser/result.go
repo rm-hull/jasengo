@@ -1,18 +1,19 @@
 package parser
 
 type Result[T any] struct {
-	Value T
-	State State
-	Err   *ParseError
+	Value    T
+	State    State
+	Err      *ParseError
+	Consumed bool
 }
 
-func success[T any](v T, st State) Result[T] {
-	return Result[T]{Value: v, State: st}
+func success[T any](v T, st State, consumed bool) Result[T] {
+	return Result[T]{Value: v, State: st, Consumed: consumed}
 }
 
-func failT[T any](msg string, st State, fatal bool) Result[T] {
+func failT[T any](msg string, st State, fatal bool, consumed bool) Result[T] {
 	err := ParseError{Message: msg, Loc: st.Loc, Fatal: fatal}
-	return Result[T]{Err: &err, State: st}
+	return Result[T]{Err: &err, State: st, Consumed: consumed}
 }
 
 func pickBestError(a, b *ParseError) *ParseError {

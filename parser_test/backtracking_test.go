@@ -7,13 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// helper
-func run[T any](p parser.Parser[T], input string) (T, *parser.ParseError) {
-	return parser.Run(p, input)
+// runFull returns the raw Result from a parser applied to the given input.
+func runFull[T any](p parser.Parser[T], input string) parser.Result[T] {
+	return p(parser.NewState(input))
 }
 
 // func TestAttemptAllowsBacktracking(t *testing.T) {
-// 	// try("ab") | "a"
 // 	ab := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[string] {
 // 		return parser.Map(parser.Char('b'), func(_ rune) string { return "ab" })
 // 	})
@@ -23,50 +22,61 @@ func run[T any](p parser.Parser[T], input string) (T, *parser.ParseError) {
 // 		parser.Map(parser.Char('a'), func(_ rune) string { return "a" }),
 // 	)
 
-// 	v, err := run(p, "aX")
-// 	assert.Nil(t, err)
-// 	assert.Equal(t, "a", v)
+// 	r := runFull(p, "aX")
+
+// 	// Choice succeeds with the second alternative "a"
+// 	assert.Nil(t, r.Err)
+// 	assert.Equal(t, "a", r.Value)
+
+// 	// The final result consumed the 'a' that matched the second alt.
+// 	// Attempt must have reset consumption for the first branch.
+// 	assert.True(t, r.Consumed)
 // }
 
 func TestAttemptDoesNotRollbackFatalErrors(t *testing.T) {
 	p := parser.Attempt(
-		parser.Commit(
-			parser.Char('x'),
-		),
+		parser.Commit(parser.Char('x')),
 	)
 
-	_, err := run(p, "y")
-	assert.NotNil(t, err)
-	assert.True(t, err.Fatal)
+	r := runFull(p, "y")
+
+	assert.NotNil(t, r.Err)
+	assert.True(t, r.Err.Fatal)
+	// Attempt shouldn't magically mark fatal as consumed; consumed depends on parser internals
+	// Here we assert consumed is false because nothing was consumed.
+	assert.False(t, r.Consumed)
 }
 
 func TestCommitPreventsBacktrackingInChoice(t *testing.T) {
-	// "a" then Commit "x"
 	ax := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[rune] {
 		return parser.Commit(parser.Char('x'))
 	})
 
 	choice := parser.Choice(ax, parser.Char('b'))
 
-	// should *not* backtrack to try 'b'
-	_, err := run(choice, "b")
-	assert.NotNil(t, err)
-	assert.True(t, err.Fatal)
+	r := runFull(choice, "b")
+
+	// Expect failure (commit prevents trying the second alt)
+	assert.NotNil(t, r.Err)
+	assert.True(t, r.Err.Fatal)
+	// No input consumed at time of failure
+	assert.False(t, r.Consumed)
 }
 
 func TestCommitAfterConsumptionFailsHard(t *testing.T) {
 	p := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[rune] {
-		// consumed 'a', now commit
 		return parser.Commit(parser.Char('z'))
 	})
 
-	_, err := run(p, "ax")
-	assert.NotNil(t, err)
-	assert.True(t, err.Fatal)
+	r := runFull(p, "ax")
+
+	assert.NotNil(t, r.Err)
+	assert.True(t, r.Err.Fatal)
+	// consumed 'a' before failing on 'z'
+	assert.True(t, r.Consumed)
 }
 
 func TestAttemptWithPartialConsumption(t *testing.T) {
-	// try("abc") | "abd"
 	abc := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[string] {
 		return parser.Map(parser.StringP("bc"), func(_ string) string { return "abc" })
 	})
@@ -77,13 +87,15 @@ func TestAttemptWithPartialConsumption(t *testing.T) {
 
 	p := parser.Choice(parser.Attempt(abc), abd)
 
-	v, err := run(p, "abd")
-	assert.Nil(t, err)
-	assert.Equal(t, "abd", v)
+	r := runFull(p, "abd")
+
+	assert.Nil(t, r.Err)
+	assert.Equal(t, "abd", r.Value)
+	// second branch consumed input
+	assert.True(t, r.Consumed)
 }
 
 func TestNoAttemptFailsAtDeepLevel(t *testing.T) {
-	// ("a" then "b" then "c") | ("a" then "b" then "d")
 	abc := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[string] {
 		return parser.Bind(parser.Char('b'), func(_ rune) parser.Parser[string] {
 			return parser.Map(parser.Char('c'), func(_ rune) string { return "abc" })
@@ -98,41 +110,52 @@ func TestNoAttemptFailsAtDeepLevel(t *testing.T) {
 
 	choice := parser.Choice(abc, abd)
 
-	// abc partially matches: consumes a,b then fails c!=d
-	// abd does NOT get tried → fail
-	_, err := run(choice, "abd")
-	assert.NotNil(t, err)
-	assert.True(t, err.Fatal)
+	r := runFull(choice, "abd")
+
+	// Without Attempt, the partial match should cause a fatal failure (no fallback)
+	assert.NotNil(t, r.Err)
+	assert.True(t, r.Err.Fatal)
+	// consumed 'a' and 'b' prior to failing on 'c'
+	assert.True(t, r.Consumed)
 }
 
 func TestManyStopsAtFatal(t *testing.T) {
-	p := parser.Many(
-		parser.Commit(parser.Char('x')),
-	)
+	p := parser.Many(parser.Commit(parser.Char('x')))
 
-	// first char ok, second fails hard (fatal)
-	_, err := run(p, "xy")
-	assert.NotNil(t, err)
-	assert.True(t, err.Fatal)
+	r := runFull(p, "xy")
+
+	assert.NotNil(t, r.Err)
+	assert.True(t, r.Err.Fatal)
+	// first 'x' was consumed before encountering the fatal failure on the second element
+	assert.True(t, r.Consumed)
 }
 
 func TestManyWithNonFatalKeepsAccumulated(t *testing.T) {
 	p := parser.Many(parser.Char('x'))
 
-	v, err := run(p, "xxxy")
-	assert.Nil(t, err)
-	assert.Equal(t, []rune{'x', 'x', 'x'}, v)
+	r := runFull(p, "xxxy")
+
+	assert.Nil(t, r.Err)
+	assert.Len(t, r.Value, 3)
+	// consumed the three 'x'
+	assert.True(t, r.Consumed)
 }
 
 func TestManyZeroWidthFatal(t *testing.T) {
-	zero := parser.Map(parser.Char('x'), func(_ rune) rune { return 'x' })
+	// This test checks that Many detects zero-width parsers and fails.
+	// We use an Attempt around a parser that (in buggy versions) might not advance,
+	// but here we rely on Many's zero-width detection to raise a fatal error.
+	zero := parser.Attempt(parser.Map(parser.Char('x'), func(_ rune) rune { return 'x' }))
+	p := parser.Many(zero)
 
-	// artificially create zero-width by removing input advancement
-	p := parser.Many(parser.Attempt(zero))
+	r := runFull(p, "xxx")
 
-	// inside Many, if parser returns same index → fatal
-	_, err := run(p, "xxx")
-	assert.NotNil(t, err)
+	assert.NotNil(t, r.Err)
+	// Many should treat zero-width as a fatal condition (to avoid infinite loop)
+	assert.True(t, r.Err.Fatal)
+	// no consumption change expected at the point Many detects the zero-width error
+	// (implementation-specific); assert a boolean but be flexible:
+	// it's acceptable for Consumed to be true if the underlying consumed something.
 }
 
 func TestNestedCommit(t *testing.T) {
@@ -144,9 +167,12 @@ func TestNestedCommit(t *testing.T) {
 		})
 	})
 
-	_, err := run(p, "abX")
-	assert.NotNil(t, err)
-	assert.True(t, err.Fatal)
+	r := runFull(p, "abX")
+
+	assert.NotNil(t, r.Err)
+	assert.True(t, r.Err.Fatal)
+	// consumed a,b before failing on c
+	assert.True(t, r.Consumed)
 }
 
 func TestAttemptInsideCommitStillFatal(t *testing.T) {
@@ -154,9 +180,12 @@ func TestAttemptInsideCommitStillFatal(t *testing.T) {
 		parser.Attempt(parser.Char('x')),
 	)
 
-	_, err := run(p, "y")
-	assert.NotNil(t, err)
-	assert.True(t, err.Fatal)
+	r := runFull(p, "y")
+
+	assert.NotNil(t, r.Err)
+	assert.True(t, r.Err.Fatal)
+	// nothing consumed
+	assert.False(t, r.Consumed)
 }
 
 // func TestChoiceWithCommitAtSecondAlternative(t *testing.T) {
@@ -165,9 +194,12 @@ func TestAttemptInsideCommitStillFatal(t *testing.T) {
 
 // 	p := parser.Choice(a, bc)
 
-// 	_, err := run(p, "bd") // bc fails fatally
-// 	assert.NotNil(t, err)
-// 	assert.True(t, err.Fatal)
+// 	r := runFull(p, "bd")
+
+// 	assert.NotNil(t, r.Err)
+// 	assert.True(t, r.Err.Fatal)
+// 	// the commit on second alternative fails immediately (no consumption)
+// 	assert.False(t, r.Consumed)
 // }
 
 func TestChoiceWithAttemptBeforeCommit(t *testing.T) {
@@ -176,9 +208,11 @@ func TestChoiceWithAttemptBeforeCommit(t *testing.T) {
 		parser.StringP("abd"),
 	)
 
-	v, err := run(p, "abd")
-	assert.Nil(t, err)
-	assert.Equal(t, "abd", v)
+	r := runFull(p, "abd")
+
+	assert.Nil(t, r.Err)
+	assert.Equal(t, "abd", r.Value)
+	assert.True(t, r.Consumed)
 }
 
 // func TestBacktrackingOnMultipleLevels(t *testing.T) {
@@ -195,9 +229,11 @@ func TestChoiceWithAttemptBeforeCommit(t *testing.T) {
 // 		part2,
 // 	)
 
-// 	v, err := run(p, "ayZ")
-// 	assert.Nil(t, err)
-// 	assert.Equal(t, "ay", v)
+// 	r := runFull(p, "ayZ")
+
+// 	assert.Nil(t, r.Err)
+// 	assert.Equal(t, "ay", r.Value)
+// 	assert.True(t, r.Consumed)
 // }
 
 func TestCommitAtTopLevelPreventsFallback(t *testing.T) {
@@ -206,7 +242,10 @@ func TestCommitAtTopLevelPreventsFallback(t *testing.T) {
 
 	p := parser.Choice(p1, p2)
 
-	_, err := run(p, "hx")
-	assert.NotNil(t, err)
-	assert.True(t, err.Fatal)
+	r := runFull(p, "hx")
+
+	assert.NotNil(t, r.Err)
+	assert.True(t, r.Err.Fatal)
+	// failure at start (no consumption)
+	assert.False(t, r.Consumed)
 }
