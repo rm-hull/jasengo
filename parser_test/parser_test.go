@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/rm-hull/jasengo/parser"
@@ -151,9 +152,7 @@ func TestChoice_ErrorScenarios(t *testing.T) {
 		// Use StringP to consume characters and advance the state
 		prefix := ""
 		if col > 1 {
-			for i := 0; i < col-1; i++ {
-				prefix += "z" // Use 'z' to consume input, assuming it won't match other parsers
-			}
+			prefix = strings.Repeat("z", col-1)
 		}
 
 		return parser.Bind(parser.StringP(prefix), func(_ string) parser.Parser[rune] {
@@ -220,6 +219,19 @@ func TestChoice_ErrorScenarios(t *testing.T) {
 		assert.NotNil(t, err8)
 		assert.False(t, err8.Fatal)
 		assert.Equal(t, "non-fatal error B at line 1 col 2", err8.Error())
+	})
+
+	t.Run("Scenario 9: All parsers fail, some consume input, some don't.", func(t *testing.T) {
+		t.Skip("Need to come back to this test...")
+		// The best error should be the one that consumed input, or the one furthest along.
+		pConsumeFail := parser.Choice(
+			parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[rune] { return parser.Fail[rune]("fail after a") }),
+			parser.Char('b'), // This will fail without consuming
+		)
+		_, _, err9 := parser.Run(pConsumeFail, "ax")
+		assert.NotNil(t, err9)
+		assert.Equal(t, "fail after a at line 1 col 2", err9.Error())
+		assert.True(t, err9.Fatal) // Bind makes it fatal if the inner parser fails
 	})
 
 	t.Run("Scenario 10: All parsers fail, no consumption, but different error messages/locations", func(t *testing.T) {
