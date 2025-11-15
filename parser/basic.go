@@ -10,12 +10,12 @@ func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
 	return func(st State) Result[rune] {
 		r, size, ok := st.currentRune()
 		if !ok {
-			return failT[rune]("unexpected EOF ("+desc+")", st, false)
+			return failT[rune]("unexpected EOF ("+desc+")", st, false, false)
 		}
 		if !pred(r) {
-			return failT[rune]("expected "+desc, st, false)
+			return failT[rune]("expected "+desc, st, false, false)
 		}
-		return success[rune](r, st.advanceRune(r, size))
+		return success[rune](r, st.advanceRune(r, size), true)
 	}
 }
 
@@ -41,7 +41,7 @@ func Digit() Parser[rune] {
 func StringP(s string) Parser[string] {
 	return func(st State) Result[string] {
 		if len(st.Input) < len(s) || st.Input[:len(s)] != s {
-			return failT[string]("expected "+strconv.Quote(s), st, false)
+			return failT[string]("expected "+strconv.Quote(s), st, false, false)
 		}
 
 		next := st
@@ -49,15 +49,15 @@ func StringP(s string) Parser[string] {
 			_, size, _ := next.currentRune()
 			next = next.advanceRune(r, size)
 		}
-		return success[string](s, next)
+		return success[string](s, next, true)
 	}
 }
 
 func EOF() Parser[struct{}] {
 	return func(st State) Result[struct{}] {
 		if len(st.Input) == 0 {
-			return success(struct{}{}, st)
+			return success(struct{}{}, st, true)
 		}
-		return failT[struct{}]("expected EOF", st, false)
+		return failT[struct{}]("expected EOF", st, false, false)
 	}
 }

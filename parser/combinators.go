@@ -6,7 +6,7 @@ func Map[A any, B any](p Parser[A], f func(A) B) Parser[B] {
 		if r.Err != nil {
 			return Result[B]{Err: r.Err, State: r.State}
 		}
-		return success[B](f(r.Value), r.State)
+		return success[B](f(r.Value), r.State, true)
 	}
 }
 
@@ -18,11 +18,13 @@ func Bind[A any, B any](p Parser[A], f func(A) Parser[B]) Parser[B] {
 			// Make *any* error fatal — even when p consumed nothing
 			e := *r.Err
 			e.Fatal = true
-			return Result[B]{Err: &e, State: r.State}
+			return Result[B]{Err: &e, State: r.State, Consumed: r.Consumed}
 		}
 
 		// now run the second parser
-		return f(r.Value)(r.State)
+		r2 := f(r.Value)(r.State)
+		r2.Consumed = r.Consumed || r2.Consumed
+		return r2
 	}
 }
 
@@ -33,7 +35,7 @@ func Attempt[T any](p Parser[T]) Parser[T] {
 			pe := *r.Err
 			pe.Loc = st.Loc
 			pe.Fatal = false
-			return Result[T]{Err: &pe, State: st}
+			return Result[T]{Err: &pe, State: st, Consumed: false}
 		}
 		return r
 	}
@@ -59,8 +61,8 @@ func Choice[T any](ps ...Parser[T]) Parser[T] {
 			if r.Err == nil {
 				return r
 			}
-			if r.Err.Fatal {
-				return r
+			if r.Err.Fatal || r.Consumed {
+				return r // no backtracking
 			}
 			best = pickBestError(best, r.Err)
 		}
@@ -78,10 +80,10 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 				if r.Err.Fatal {
 					return Result[[]T]{Err: r.Err, State: r.State}
 				}
-				return success(out, cur)
+				return success(out, cur, true)
 			}
 			if r.State.Loc.Index == cur.Loc.Index {
-				return failT[[]T]("Many: zero-width parser", cur, true)
+				return failT[[]T]("Many: zero-width parser", cur, true, false)
 			}
 			out = append(out, r.Value)
 			cur = r.State
@@ -96,7 +98,7 @@ func Many1[T any](p Parser[T]) Parser[[]T] {
 			return r
 		}
 		if len(r.Value) == 0 {
-			return failT[[]T]("expected 1+", st, false)
+			return failT[[]T]("expected 1+", st, false, false)
 		}
 		return r
 	}
@@ -109,11 +111,11 @@ func Optional[T any](p Parser[T]) Parser[*T] {
 			if r.Err.Fatal {
 				return Result[*T]{Err: r.Err, State: r.State}
 			}
-			return success[*T](nil, st)
+			return success[*T](nil, st, true)
 		}
 		v := new(T)
 		*v = r.Value
-		return success(v, r.State)
+		return success(v, r.State, true)
 	}
 }
 
@@ -124,7 +126,7 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 			if r.Err.Fatal {
 				return Result[[]T]{Err: r.Err, State: r.State}
 			}
-			return success([]T{}, st)
+			return success([]T{}, st, true)
 		}
 
 		out := []T{r.Value}
@@ -136,14 +138,14 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 				if rs.Err.Fatal {
 					return Result[[]T]{Err: rs.Err, State: rs.State}
 				}
-				return success(out, cur)
+				return success(out, cur, true)
 			}
 			rn := p(rs.State)
 			if rn.Err != nil {
 				if rn.Err.Fatal {
 					return Result[[]T]{Err: rn.Err, State: rn.State}
 				}
-				return success(out, cur)
+				return success(out, cur, true)
 			}
 			out = append(out, rn.Value)
 			cur = rn.State
