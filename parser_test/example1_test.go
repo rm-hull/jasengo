@@ -1,10 +1,10 @@
 package parser_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/rm-hull/jasengo/parser"
+	"github.com/rm-hull/jasengo/parser_test/ast"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,32 +15,38 @@ import (
 //    searchAnd  ::= searchTerm [ AND searchTerm ]...
 //    searchTerm ::= [NOT] ( singleWord | quotedString | '(' searchExpr ')' )
 
-func buildExprParser(term parser.Parser[any], op string) parser.Parser[any] {
+func buildExprParser(term parser.Parser[ast.Node], op string) parser.Parser[ast.Node] {
 	opParser := parser.Right(parser.Symb(op), term)
-	return parser.Bind(term, func(first any) parser.Parser[any] {
-		return parser.Map(parser.Many(opParser), func(rest []any) any {
+	return parser.Bind(term, func(first ast.Node) parser.Parser[ast.Node] {
+		return parser.Map(parser.Many(opParser), func(rest []ast.Node) ast.Node {
 			if len(rest) == 0 {
 				return first
 			}
-			result := []any{strings.ToUpper(op), first}
-			result = append(result, rest...)
-			return result
+			operands := []ast.Node{first}
+			operands = append(operands, rest...)
+			if op == "and" {
+				return ast.AndNode{Operands: operands}
+			}
+			return ast.OrNode{Operands: operands}
 		})
 	})
 }
 
 func TestWorkedExample1(t *testing.T) {
 	// Forward declaration for recursive parser
-	var searchExpr parser.Parser[any]
+	var searchExpr parser.Parser[ast.Node]
 
-	alphaNum := parser.Choice(parser.Lower(), parser.Upper(), parser.Digit())
+	alphaNum := parser.Choice(parser.Lower(), parser.Digit())
 
-	singleWord := parser.Token(parser.Many1(alphaNum))
+	singleWord := parser.Map(parser.Token(parser.Many1(alphaNum)), func(v []rune) string { return string(v) })
 
-	quotedString := parser.Between(
-		parser.Symb(`"`),
-		parser.Many1(parser.Choice(alphaNum, parser.Char(' '))),
-		parser.Symb(`"`),
+	quotedString := parser.Map(
+		parser.Between(
+			parser.Symb(`"`),
+			parser.Many1(parser.Choice(alphaNum, parser.Char(' '))),
+			parser.Symb(`"`),
+		),
+		func(v []rune) string { return string(v) },
 	)
 
 	bracketedExpr := parser.Between(
@@ -51,16 +57,16 @@ func TestWorkedExample1(t *testing.T) {
 
 	searchTerm := parser.Bind(
 		parser.Optional(parser.Symb("not")),
-		func(not *string) parser.Parser[any] {
+		func(not *string) parser.Parser[ast.Node] {
 			return parser.Bind(
 				parser.Choice(
-					parser.Map(singleWord, func(v []rune) any { return string(v) }),
-					parser.Map(quotedString, func(v []rune) any { return string(v) }),
+					parser.Map(singleWord, func(v string) ast.Node { return ast.TermNode{Value: v} }),
+					parser.Map(quotedString, func(v string) ast.Node { return ast.TermNode{Value: v} }),
 					bracketedExpr,
 				),
-				func(term any) parser.Parser[any] {
+				func(term ast.Node) parser.Parser[ast.Node] {
 					if not != nil {
-						return parser.Return[any]([]any{"NOT", term})
+						return parser.Return[ast.Node](ast.NotNode{Operand: term})
 					}
 					return parser.Return(term)
 				},
@@ -76,27 +82,57 @@ func TestWorkedExample1(t *testing.T) {
 	// Test cases from the Clojure example
 	testCases := []struct {
 		input    string
-		expected any
+		expected ast.Node
 	}{
 		{
 			"wood and blue or red",
-			[]any{"OR", []any{"AND", "wood", "blue"}, "red"},
+			ast.OrNode{Operands: []ast.Node{
+				ast.AndNode{Operands: []ast.Node{
+					ast.TermNode{Value: "wood"},
+					ast.TermNode{Value: "blue"},
+				}},
+				ast.TermNode{Value: "red"},
+			}},
 		},
 		{
 			"wood and (blue or red)",
-			[]any{"AND", "wood", []any{"OR", "blue", "red"}},
+			ast.AndNode{Operands: []ast.Node{
+				ast.TermNode{Value: "wood"},
+				ast.OrNode{Operands: []ast.Node{
+					ast.TermNode{Value: "blue"},
+					ast.TermNode{Value: "red"},
+				}},
+			}},
 		},
 		{
 			"(steel or iron) and \"lime green\"",
-			[]any{"AND", []any{"OR", "steel", "iron"}, "lime green"},
+			ast.AndNode{Operands: []ast.Node{
+				ast.OrNode{Operands: []ast.Node{
+					ast.TermNode{Value: "steel"},
+					ast.TermNode{Value: "iron"},
+				}},
+				ast.TermNode{Value: "lime green"},
+			}},
 		},
 		{
 			"not steel or iron and \"lime green\"",
-			[]any{"OR", []any{"NOT", "steel"}, []any{"AND", "iron", "lime green"}},
+			ast.OrNode{Operands: []ast.Node{
+				ast.NotNode{Operand: ast.TermNode{Value: "steel"}},
+				ast.AndNode{Operands: []ast.Node{
+					ast.TermNode{Value: "iron"},
+					ast.TermNode{Value: "lime green"},
+				}},
+			}},
 		},
 		{
 			"not(steel or iron) and \"lime green\"",
-			[]any{"AND", []any{"NOT", []any{"OR", "steel", "iron"}}, "lime green"},
+			ast.AndNode{Operands: []ast.Node{
+				ast.NotNode{Operand: ast.OrNode{Operands: []ast.Node{
+					ast.TermNode{Value: "steel"},
+					ast.TermNode{Value: "iron"},
+				}}},
+				ast.TermNode{Value: "lime green"},
+			}},
 		},
 	}
 
