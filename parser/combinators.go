@@ -51,15 +51,22 @@ func Rec[T any](p *Parser[T]) Parser[T] {
 func Map[A any, B any](p Parser[A], f func(A) B) Parser[B] {
 	return func(st State) Result[B] {
 		r := p(st)
-		if r.Err != nil {
+		if r.Error != nil {
 			return Result[B]{
-				Err:      r.Err,
+				Error:    r.Error,
 				State:    r.State,
 				Consumed: r.Consumed,
 			}
 		}
 		return success(f(r.Value), r.State, r.Consumed)
 	}
+}
+
+// ToAny converts a Parser[T] to a Parser[any].
+func ToAny[T any](p Parser[T]) Parser[any] {
+	return Map(p, func(val T) any {
+		return val
+	})
 }
 
 // Bind (also known as `AndThen` or `>>=`) sequences two parsers.
@@ -70,9 +77,9 @@ func Bind[A any, B any](p Parser[A], f func(A) Parser[B]) Parser[B] {
 	return func(st State) Result[B] {
 		r := p(st)
 
-		if r.Err != nil {
+		if r.Error != nil {
 			return Result[B]{
-				Err:      r.Err,
+				Error:    r.Error,
 				State:    r.State,
 				Consumed: r.Consumed,
 			}
@@ -93,17 +100,17 @@ func Bind[A any, B any](p Parser[A], f func(A) Parser[B]) Parser[B] {
 func Attempt[T any](p Parser[T]) Parser[T] {
 	return func(st State) Result[T] {
 		r := p(st)
-		if r.Err != nil {
-			if r.Err.Fatal {
+		if r.Error != nil {
+			if r.Error.Fatal {
 				// If the error is fatal, propagate it immediately.
 				return r
 			}
 			// For non-fatal errors, perform the rollback.
-			pe := *r.Err
+			pe := *r.Error
 			pe.Loc = st.Loc
 			pe.Fatal = false
 			return Result[T]{
-				Err:      &pe,
+				Error:    &pe,
 				State:    st,
 				Consumed: false,
 			}
@@ -120,11 +127,11 @@ func Attempt[T any](p Parser[T]) Parser[T] {
 func Commit[T any](p Parser[T]) Parser[T] {
 	return func(st State) Result[T] {
 		r := p(st)
-		if r.Err != nil {
-			pe := *r.Err
+		if r.Error != nil {
+			pe := *r.Error
 			pe.Fatal = true
 			return Result[T]{
-				Err:      &pe,
+				Error:    &pe,
 				State:    r.State,
 				Consumed: r.Consumed,
 			}
@@ -143,20 +150,46 @@ func Choice[T any](ps ...Parser[T]) Parser[T] {
 		var consumed bool
 		for _, p := range ps {
 			r := p(st)
-			if r.Err == nil {
+			if r.Error == nil {
 				return r
 			}
 			consumed = consumed || r.Consumed
-			if r.Err.Fatal || r.Consumed {
+			if r.Error.Fatal || r.Consumed {
 				return r // no backtracking
 			}
-			best = pickBestError(best, r.Err)
+			best = pickBestError(best, r.Error)
 		}
 		return Result[T]{
-			Err:      best,
+			Error:    best,
 			State:    st,
 			Consumed: consumed,
 		}
+	}
+}
+
+// Sequence applies a list of parsers in order.
+// It collects all successful results into a slice of interface{}.
+// If any parser in the sequence fails, the entire sequence fails.
+func Sequence(ps ...Parser[any]) Parser[[]any] {
+	return func(st State) Result[[]any] {
+		var results []any
+		currentState := st
+		consumed := false
+
+		for _, p := range ps {
+			r := p(currentState)
+			if r.Error != nil {
+				return Result[[]any]{
+					Error:    r.Error,
+					State:    r.State,
+					Consumed: consumed || r.Consumed,
+				}
+			}
+			results = append(results, r.Value)
+			currentState = r.State
+			consumed = consumed || r.Consumed
+		}
+		return success(results, currentState, consumed)
 	}
 }
 
@@ -170,10 +203,10 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 		consumed := false
 		for {
 			r := p(cur)
-			if r.Err != nil {
-				if r.Err.Fatal {
+			if r.Error != nil {
+				if r.Error.Fatal {
 					return Result[[]T]{
-						Err:      r.Err,
+						Error:    r.Error,
 						State:    r.State,
 						Consumed: consumed || r.Consumed,
 					}
@@ -196,7 +229,7 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 func Many1[T any](p Parser[T]) Parser[[]T] {
 	return func(st State) Result[[]T] {
 		r := Many(p)(st)
-		if r.Err != nil {
+		if r.Error != nil {
 			return r
 		}
 		if len(r.Value) == 0 {
@@ -213,10 +246,10 @@ func Many1[T any](p Parser[T]) Parser[[]T] {
 func Optional[T any](p Parser[T]) Parser[*T] {
 	return func(st State) Result[*T] {
 		r := p(st)
-		if r.Err != nil {
-			if r.Err.Fatal {
+		if r.Error != nil {
+			if r.Error.Fatal {
 				return Result[*T]{
-					Err:      r.Err,
+					Error:    r.Error,
 					State:    r.State,
 					Consumed: r.Consumed,
 				}
@@ -246,10 +279,10 @@ func SepBy1[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 	return func(st State) Result[[]T] {
 		r := p(st)
-		if r.Err != nil {
-			if r.Err.Fatal || r.Consumed {
+		if r.Error != nil {
+			if r.Error.Fatal || r.Consumed {
 				return Result[[]T]{
-					Err:      r.Err,
+					Error:    r.Error,
 					State:    r.State,
 					Consumed: r.Consumed,
 				}
@@ -263,10 +296,10 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 
 		for {
 			sepResult := sep(cur)
-			if sepResult.Err != nil {
-				if sepResult.Err.Fatal || sepResult.Consumed {
+			if sepResult.Error != nil {
+				if sepResult.Error.Fatal || sepResult.Consumed {
 					return Result[[]T]{
-						Err:      sepResult.Err,
+						Error:    sepResult.Error,
 						State:    sepResult.State,
 						Consumed: consumed || sepResult.Consumed,
 					}
@@ -275,10 +308,10 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 			}
 
 			pResult := p(sepResult.State)
-			if pResult.Err != nil {
-				if pResult.Err.Fatal || pResult.Consumed {
+			if pResult.Error != nil {
+				if pResult.Error.Fatal || pResult.Consumed {
 					return Result[[]T]{
-						Err:      pResult.Err,
+						Error:    pResult.Error,
 						State:    pResult.State,
 						Consumed: consumed || sepResult.Consumed || pResult.Consumed,
 					}
@@ -300,7 +333,7 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 func ChainL[A any](p Parser[A], op Parser[func(A, A) A]) Parser[A] {
 	return func(st State) Result[A] {
 		res := p(st)
-		if res.Err != nil {
+		if res.Error != nil {
 			return res
 		}
 
@@ -310,10 +343,10 @@ func ChainL[A any](p Parser[A], op Parser[func(A, A) A]) Parser[A] {
 
 		for {
 			opRes := op(cur)
-			if opRes.Err != nil {
-				if opRes.Err.Fatal || opRes.Consumed {
+			if opRes.Error != nil {
+				if opRes.Error.Fatal || opRes.Consumed {
 					return Result[A]{
-						Err:      opRes.Err,
+						Error:    opRes.Error,
 						State:    opRes.State,
 						Consumed: consumed || opRes.Consumed,
 					}
@@ -322,12 +355,12 @@ func ChainL[A any](p Parser[A], op Parser[func(A, A) A]) Parser[A] {
 			}
 
 			pRes := p(opRes.State)
-			if pRes.Err != nil {
+			if pRes.Error != nil {
 				// If op succeeded, we must find a value, otherwise it's a syntax error.
-				err := *pRes.Err
+				err := *pRes.Error
 				err.Fatal = true
 				return Result[A]{
-					Err:      &err,
+					Error:    &err,
 					State:    pRes.State,
 					Consumed: consumed || opRes.Consumed || pRes.Consumed,
 				}

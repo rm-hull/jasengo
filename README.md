@@ -24,31 +24,6 @@ Here are a few examples demonstrating how to use `jasengo` to build parsers.
 More complex parsing examples can be found in [example1_test.go](./parser_test/example1_test.go)
 and [example2_test.go](./parser_test/example2_test.go).
 
-#### Basic Character Parsing
-
-This example shows how to parse a single character.
-
-```go
-package main
-
-import (
-	"fmt"
-	"github.com/rm-hull/jasengo/parser"
-)
-
-func main() {
-	p := parser.Char('a')
-	result := p.Parse(parser.NewState("abc"))
-
-	if result.IsSuccess() {
-		fmt.Printf("Successfully parsed: %v, remaining: %s\n", result.Value(), result.State().Remaining())
-	} else {
-		fmt.Printf("Parse error: %v\n", result.Error())
-	}
-	// Output: Successfully parsed: a, remaining: bc
-}
-```
-
 #### Parsing a Specific String
 
 This example demonstrates parsing a fixed string.
@@ -58,17 +33,18 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/rm-hull/jasengo/parser"
 )
 
 func main() {
 	p := parser.StringP("hello")
-	result := p.Parse(parser.NewState("hello world"))
+	result := p(parser.NewState("hello world"))
 
 	if result.IsSuccess() {
-		fmt.Printf("Successfully parsed: %v, remaining: %s\n", result.Value(), result.State().Remaining())
+		fmt.Printf("Successfully parsed: %v, remaining: %s\n", result.Value, result.State.Remaining())
 	} else {
-		fmt.Printf("Parse error: %v\n", result.Error())
+		fmt.Printf("Parse error: %v\n", result.Error)
 	}
 	// Output: Successfully parsed: hello, remaining:  world
 }
@@ -83,6 +59,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/rm-hull/jasengo/parser"
 )
 
@@ -92,18 +69,25 @@ func main() {
 	valueParser := parser.Many(parser.Digit())
 
 	// Parse a sequence of key, '=', value
-	p := parser.Sequence(keyParser, eqParser, valueParser).Map(func(vals []interface{}) (interface{}, error) {
-		key := string(vals[0].([]rune))
-		value := string(vals[2].([]rune))
-		return fmt.Sprintf("%s:%s", key, value), nil
-	})
+	p := parser.Map(
+		parser.Sequence(
+			parser.ToAny(keyParser),
+			parser.ToAny(eqParser),
+			parser.ToAny(valueParser),
+		),
+		func(vals []any) any {
+			key := string(vals[0].([]rune))
+			value := string(vals[2].([]rune))
+			return fmt.Sprintf("%s:%s", key, value)
+		},
+	)
 
-	result := p.Parse(parser.NewState("count=123"))
+	result := p(parser.NewState("count=123"))
 
 	if result.IsSuccess() {
-		fmt.Printf("Successfully parsed: %v, remaining: %s\n", result.Value(), result.State().Remaining())
+		fmt.Printf("Successfully parsed: %v, remaining: %s\n", result.Value, result.State.Remaining())
 	} else {
-		fmt.Printf("Parse error: %v\n", result.Error())
+		fmt.Printf("Parse error: %v\n", result.Error)
 	}
 	// Output: Successfully parsed: count:123, remaining:
 }

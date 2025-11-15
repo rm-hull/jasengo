@@ -52,3 +52,7 @@ func (st State) currentRune() (rune, int, bool) {
 	r, size := utf8.DecodeRuneInString(st.Input[st.Loc.Index:])
 	return r, size, true
 }
+
+func (st State) Remaining() string {
+	return st.Input[st.Loc.Index:]
+}

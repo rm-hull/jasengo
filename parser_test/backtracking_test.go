@@ -25,7 +25,7 @@ func TestAttemptAllowsBacktracking2(t *testing.T) {
 	r := runFull(p, "aX")
 
 	// Choice succeeds with the second alternative "a"
-	assert.Nil(t, r.Err)
+	assert.Nil(t, r.Error)
 	assert.Equal(t, "a", r.Value)
 
 	// The final result consumed the 'a' that matched the second alt.
@@ -40,8 +40,8 @@ func TestAttemptDoesNotRollbackFatalErrors(t *testing.T) {
 
 	r := runFull(p, "y")
 
-	assert.NotNil(t, r.Err)
-	assert.True(t, r.Err.Fatal)
+	assert.NotNil(t, r.Error)
+	assert.True(t, r.Error.Fatal)
 	// Attempt shouldn't magically mark fatal as consumed; consumed depends on parser internals
 	// Here we assert consumed is false because nothing was consumed.
 	assert.False(t, r.Consumed)
@@ -57,8 +57,8 @@ func TestCommitPreventsBacktrackingInChoice(t *testing.T) {
 	r := runFull(choice, "az")
 
 	// Expect failure (commit prevents trying the second alt)
-	assert.NotNil(t, r.Err)
-	assert.True(t, r.Err.Fatal)
+	assert.NotNil(t, r.Error)
+	assert.True(t, r.Error.Fatal)
 	// 'a' was consumed before the fatal error
 	assert.True(t, r.Consumed)
 }
@@ -70,8 +70,8 @@ func TestCommitAfterConsumptionFailsHard(t *testing.T) {
 
 	r := runFull(p, "ax")
 
-	assert.NotNil(t, r.Err)
-	assert.True(t, r.Err.Fatal)
+	assert.NotNil(t, r.Error)
+	assert.True(t, r.Error.Fatal)
 	// consumed 'a' before failing on 'z'
 	assert.True(t, r.Consumed)
 }
@@ -89,7 +89,7 @@ func TestAttemptWithPartialConsumption(t *testing.T) {
 
 	r := runFull(p, "abd")
 
-	assert.Nil(t, r.Err)
+	assert.Nil(t, r.Error)
 	assert.Equal(t, "abd", r.Value)
 	// second branch consumed input
 	assert.True(t, r.Consumed)
@@ -113,7 +113,7 @@ func TestNoAttemptFailsAtDeepLevel(t *testing.T) {
 	r := runFull(choice, "abd")
 
 	// Without Attempt, the partial match should cause a fatal failure (no fallback)
-	assert.NotNil(t, r.Err)
+	assert.NotNil(t, r.Error)
 	// consumed 'a' and 'b' prior to failing on 'c'
 	assert.True(t, r.Consumed)
 }
@@ -123,8 +123,8 @@ func TestManyStopsAtFatal(t *testing.T) {
 
 	r := runFull(p, "xy")
 
-	assert.NotNil(t, r.Err)
-	assert.True(t, r.Err.Fatal)
+	assert.NotNil(t, r.Error)
+	assert.True(t, r.Error.Fatal)
 	// first 'x' was consumed before encountering the fatal failure on the second element
 	assert.True(t, r.Consumed)
 }
@@ -134,7 +134,7 @@ func TestManyWithNonFatalKeepsAccumulated(t *testing.T) {
 
 	r := runFull(p, "xxxy")
 
-	assert.Nil(t, r.Err)
+	assert.Nil(t, r.Error)
 	assert.Len(t, r.Value, 3)
 	// consumed the three 'x'
 	assert.True(t, r.Consumed)
@@ -149,9 +149,9 @@ func TestManyZeroWidthFatal(t *testing.T) {
 
 	r := runFull(p, "xxx")
 
-	assert.NotNil(t, r.Err)
+	assert.NotNil(t, r.Error)
 	// Many should treat zero-width as a fatal condition (to avoid infinite loop)
-	assert.True(t, r.Err.Fatal)
+	assert.True(t, r.Error.Fatal)
 	assert.False(t, r.Consumed)
 }
 
@@ -166,8 +166,8 @@ func TestNestedCommit(t *testing.T) {
 
 	r := runFull(p, "abX")
 
-	assert.NotNil(t, r.Err)
-	assert.True(t, r.Err.Fatal)
+	assert.NotNil(t, r.Error)
+	assert.True(t, r.Error.Fatal)
 	// consumed a,b before failing on c
 	assert.True(t, r.Consumed)
 }
@@ -179,8 +179,8 @@ func TestAttemptInsideCommitStillFatal(t *testing.T) {
 
 	r := runFull(p, "y")
 
-	assert.NotNil(t, r.Err)
-	assert.True(t, r.Err.Fatal)
+	assert.NotNil(t, r.Error)
+	assert.True(t, r.Error.Fatal)
 	// nothing consumed
 	assert.False(t, r.Consumed)
 }
@@ -193,8 +193,8 @@ func TestChoiceWithCommitAtSecondAlternative(t *testing.T) {
 
 	r := runFull(p, "bd")
 
-	assert.NotNil(t, r.Err)
-	assert.True(t, r.Err.Fatal)
+	assert.NotNil(t, r.Error)
+	assert.True(t, r.Error.Fatal)
 	// the commit on second alternative fails immediately (no consumption)
 	assert.False(t, r.Consumed)
 }
@@ -207,7 +207,7 @@ func TestChoiceWithAttemptBeforeCommit(t *testing.T) {
 
 	r := runFull(p, "abd")
 
-	assert.Nil(t, r.Err)
+	assert.Nil(t, r.Error)
 	assert.Equal(t, "abd", r.Value)
 	assert.True(t, r.Consumed)
 }
@@ -228,7 +228,7 @@ func TestBacktrackingOnMultipleLevels(t *testing.T) {
 
 	r := runFull(p, "ayZ")
 
-	assert.Nil(t, r.Err)
+	assert.Nil(t, r.Error)
 	assert.Equal(t, "ay", r.Value)
 	assert.True(t, r.Consumed)
 }
@@ -241,8 +241,8 @@ func TestCommitAtTopLevelPreventsFallback(t *testing.T) {
 
 	r := runFull(p, "hx")
 
-	assert.NotNil(t, r.Err)
-	assert.True(t, r.Err.Fatal)
+	assert.NotNil(t, r.Error)
+	assert.True(t, r.Error.Fatal)
 	// failure at start (no consumption)
 	assert.False(t, r.Consumed)
 }

@@ -60,6 +60,12 @@ func Upper() Parser[rune] {
 	return Satisfy(unicode.IsUpper, "uppercase letter")
 }
 
+// Letter returns a parser that succeeds if the next rune in the input
+// is an uppercase or lowercase letter. It consumes the rune if successful.
+func Letter() Parser[rune] {
+	return Satisfy(unicode.IsLetter, "letter")
+}
+
 // Whitespace returns a parser that matches zero or more whitespace characters
 // (space, tab, newline, carriage return). It returns the matched runes.
 func Whitespace() Parser[[]rune] {
