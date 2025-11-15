@@ -84,7 +84,8 @@ func Return[T any](v T) Parser[T] {
 // given string `s`. It consumes the matched string if successful.
 func StringP(s string) Parser[string] {
 	return func(st *State) Result[string] {
-		if !strings.HasPrefix(st.Input[st.Loc.Index:], s) {
+		input := *st.Input
+		if !strings.HasPrefix(input[st.Loc.Index:], s) {
 			return failT[string]("expected "+strconv.Quote(s), st, false, false)
 		}
 
@@ -102,7 +103,8 @@ func StringP(s string) Parser[string] {
 // has been reached. It does not consume any input.
 func EOF() Parser[struct{}] {
 	return func(st *State) Result[struct{}] {
-		if st.Loc.Index >= len(st.Input) {
+		input := *st.Input
+		if st.Loc.Index >= len(input) {
 			return success(struct{}{}, st, false)
 		}
 		// The EOF parser should not report that it has consumed input,

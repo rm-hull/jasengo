@@ -16,13 +16,13 @@ func (l *Location) String() string {
 }
 
 type State struct {
-	Input string
+	Input *string
 	Loc   Location
 }
 
 func NewState(s string) *State {
 	return &State{
-		Input: s,
+		Input: &s,
 		Loc:   Location{Index: 0, Line: 1, Col: 1},
 	}
 }
@@ -46,13 +46,15 @@ func (st *State) advanceRune(r rune, size int) *State {
 }
 
 func (st *State) currentRune() (rune, int, bool) {
-	if st.Loc.Index >= len(st.Input) {
+	input := *st.Input
+	if st.Loc.Index >= len(input) {
 		return 0, 0, false
 	}
-	r, size := utf8.DecodeRuneInString(st.Input[st.Loc.Index:])
+	r, size := utf8.DecodeRuneInString(input[st.Loc.Index:])
 	return r, size, true
 }
 
 func (st *State) Remaining() string {
-	return st.Input[st.Loc.Index:]
+	input := *st.Input
+	return input[st.Loc.Index:]
 }
