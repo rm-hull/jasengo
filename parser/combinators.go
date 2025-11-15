@@ -52,7 +52,11 @@ func Map[A any, B any](p Parser[A], f func(A) B) Parser[B] {
 	return func(st State) Result[B] {
 		r := p(st)
 		if r.Err != nil {
-			return Result[B]{Err: r.Err, State: r.State, Consumed: r.Consumed}
+			return Result[B]{
+				Err:      r.Err,
+				State:    r.State,
+				Consumed: r.Consumed,
+			}
 		}
 		return success[B](f(r.Value), r.State, r.Consumed)
 	}
@@ -67,7 +71,11 @@ func Bind[A any, B any](p Parser[A], f func(A) Parser[B]) Parser[B] {
 		r := p(st)
 
 		if r.Err != nil {
-			return Result[B]{Err: r.Err, State: r.State, Consumed: r.Consumed}
+			return Result[B]{
+				Err:      r.Err,
+				State:    r.State,
+				Consumed: r.Consumed,
+			}
 		}
 
 		// now run the second parser
@@ -94,7 +102,11 @@ func Attempt[T any](p Parser[T]) Parser[T] {
 			pe := *r.Err
 			pe.Loc = st.Loc
 			pe.Fatal = false
-			return Result[T]{Err: &pe, State: st, Consumed: false}
+			return Result[T]{
+				Err:      &pe,
+				State:    st,
+				Consumed: false,
+			}
 		}
 		return r
 	}
@@ -111,7 +123,11 @@ func Commit[T any](p Parser[T]) Parser[T] {
 		if r.Err != nil {
 			pe := *r.Err
 			pe.Fatal = true
-			return Result[T]{Err: &pe, State: r.State, Consumed: r.Consumed}
+			return Result[T]{
+				Err:      &pe,
+				State:    r.State,
+				Consumed: r.Consumed,
+			}
 		}
 		return r
 	}
@@ -124,17 +140,23 @@ func Commit[T any](p Parser[T]) Parser[T] {
 func Choice[T any](ps ...Parser[T]) Parser[T] {
 	return func(st State) Result[T] {
 		var best *ParseError
+		var consumed bool
 		for _, p := range ps {
 			r := p(st)
 			if r.Err == nil {
 				return r
 			}
+			consumed = consumed || r.Consumed
 			if r.Err.Fatal || r.Consumed {
 				return r // no backtracking
 			}
 			best = pickBestError(best, r.Err)
 		}
-		return Result[T]{Err: best, State: st}
+		return Result[T]{
+			Err:      best,
+			State:    st,
+			Consumed: consumed,
+		}
 	}
 }
 
@@ -150,7 +172,11 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 			r := p(cur)
 			if r.Err != nil {
 				if r.Err.Fatal {
-					return Result[[]T]{Err: r.Err, State: r.State, Consumed: consumed || r.Consumed}
+					return Result[[]T]{
+						Err:      r.Err,
+						State:    r.State,
+						Consumed: consumed || r.Consumed,
+					}
 				}
 				return success(out, cur, consumed)
 			}
@@ -189,7 +215,11 @@ func Optional[T any](p Parser[T]) Parser[*T] {
 		r := p(st)
 		if r.Err != nil {
 			if r.Err.Fatal {
-				return Result[*T]{Err: r.Err, State: r.State, Consumed: r.Consumed}
+				return Result[*T]{
+					Err:      r.Err,
+					State:    r.State,
+					Consumed: r.Consumed,
+				}
 			}
 			return success[*T](nil, st, false)
 		}
@@ -218,7 +248,11 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 		r := p(st)
 		if r.Err != nil {
 			if r.Err.Fatal || r.Consumed {
-				return Result[[]T]{Err: r.Err, State: r.State, Consumed: r.Consumed}
+				return Result[[]T]{
+					Err:      r.Err,
+					State:    r.State,
+					Consumed: r.Consumed,
+				}
 			}
 			return success([]T{}, st, false)
 		}
@@ -231,7 +265,11 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 			sepResult := sep(cur)
 			if sepResult.Err != nil {
 				if sepResult.Err.Fatal || sepResult.Consumed {
-					return Result[[]T]{Err: sepResult.Err, State: sepResult.State, Consumed: consumed || sepResult.Consumed}
+					return Result[[]T]{
+						Err:      sepResult.Err,
+						State:    sepResult.State,
+						Consumed: consumed || sepResult.Consumed,
+					}
 				}
 				return success(out, cur, consumed)
 			}
@@ -239,7 +277,11 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 			pResult := p(sepResult.State)
 			if pResult.Err != nil {
 				if pResult.Err.Fatal || pResult.Consumed {
-					return Result[[]T]{Err: pResult.Err, State: pResult.State, Consumed: consumed || sepResult.Consumed || pResult.Consumed}
+					return Result[[]T]{
+						Err:      pResult.Err,
+						State:    pResult.State,
+						Consumed: consumed || sepResult.Consumed || pResult.Consumed,
+					}
 				}
 				return success(out, cur, consumed)
 			}

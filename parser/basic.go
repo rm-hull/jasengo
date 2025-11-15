@@ -105,3 +105,11 @@ func EOF() Parser[struct{}] {
 		return failT[struct{}]("expected EOF", st, false, false)
 	}
 }
+
+// Fail returns a parser that always fails with the given message.
+// It does not consume any input.
+func Fail[T any](msg string) Parser[T] {
+	return func(st State) Result[T] {
+		return failT[T](msg, st, false, false)
+	}
+}

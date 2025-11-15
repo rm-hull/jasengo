@@ -93,7 +93,7 @@ func TestWorkedExample1(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.input, func(t *testing.T) {
-			result, err := parser.Run(fullParser, tc.input)
+			result, _, err := parser.Run(fullParser, tc.input)
 			assert.Nil(t, err)
 			assert.Equal(t, tc.expected, result.ToString())
 		})
@@ -101,14 +101,14 @@ func TestWorkedExample1(t *testing.T) {
 
 	// Test for parsing error: "steel iron"
 	t.Run("steel iron - error", func(t *testing.T) {
-		_, err := parser.Run(fullParser, "steel iron")
+		_, _, err := parser.Run(fullParser, "steel iron")
 		assert.NotNil(t, err)
 		assert.ErrorContains(t, err, "expected EOF at line 1 col 7")
 	})
 
 	// Test for empty input: ""
 	t.Run("empty input - error", func(t *testing.T) {
-		_, err := parser.Run(fullParser, "")
+		_, _, err := parser.Run(fullParser, "")
 		assert.NotNil(t, err)
 		assert.ErrorContains(t, err, "expected 1+ at line 1 col 1")
 	})

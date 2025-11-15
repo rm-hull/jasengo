@@ -79,7 +79,7 @@ func init() {
 func TestEvaluateExpr(t *testing.T) {
 	// With left-associativity, "1 - 2 * 3 + 4" is evaluated as ((1 - (2*3)) + 4) = -1.
 	expected := -1
-	result, err := parser.Run(expr, " 1 - 2 * 3 + 4 ")
+	result, _, err := parser.Run(expr, " 1 - 2 * 3 + 4 ")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
@@ -98,7 +98,7 @@ func init() {
 func TestEvaluateExprPrime(t *testing.T) {
 	// NOTE: historical expected := 1 - (2 * (3 + 4)) // => -13
 	expected := 1 - ((2 * 3) + 4) // => -9
-	result, err := parser.Run(exprPrime, " 1 - 2 * 3 + 4 ")
+	result, _, err := parser.Run(exprPrime, " 1 - 2 * 3 + 4 ")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
@@ -107,14 +107,14 @@ func TestEvaluateExprPrime(t *testing.T) {
 func TestEvaluateExprWithParentheses(t *testing.T) {
 	// (1 + 2) * 3 = 9
 	expected := (1 + 2) * 3
-	result, err := parser.Run(expr, "(1 + 2) * 3")
+	result, _, err := parser.Run(expr, "(1 + 2) * 3")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
 
 	// 1 + (2 * 3) = 7
 	expected = 1 + (2 * 3)
-	result, err = parser.Run(expr, "1 + (2 * 3)")
+	result, _, err = parser.Run(expr, "1 + (2 * 3)")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
@@ -123,14 +123,14 @@ func TestEvaluateExprWithParentheses(t *testing.T) {
 func TestEvaluateExprPrimeWithParentheses(t *testing.T) {
 	// (1 + 2) * 3 = 9 (chain-right doesn't change this due to parentheses)
 	expected := (1 + 2) * 3
-	result, err := parser.Run(exprPrime, "(1 + 2) * 3")
+	result, _, err := parser.Run(exprPrime, "(1 + 2) * 3")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
 
 	// 1 + (2 * 3) = 7 (chain-right doesn't change this due to parentheses)
 	expected = 1 + (2 * 3)
-	result, err = parser.Run(exprPrime, "1 + (2 * 3)")
+	result, _, err = parser.Run(exprPrime, "1 + (2 * 3)")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
@@ -139,7 +139,7 @@ func TestEvaluateExprPrimeWithParentheses(t *testing.T) {
 func TestEvaluateExprComplex(t *testing.T) {
 	// 1 + 2 - 3 * 4 / 2 = 1 + 2 - ((3 * 4) / 2) = 1 + 2 - (12 / 2) = 1 + 2 - 6 = 3 - 6 = -3
 	expected := 1 + 2 - 3*4/2
-	result, err := parser.Run(expr, "1 + 2 - 3 * 4 / 2")
+	result, _, err := parser.Run(expr, "1 + 2 - 3 * 4 / 2")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
@@ -153,7 +153,7 @@ func TestEvaluateExprPrimeComplex(t *testing.T) {
 	// 2 - 6 = -4
 	// 1 + (-4) = -3
 	expected := 1 + (2 - (3 * (4 / 2)))
-	result, err := parser.Run(exprPrime, "1 + 2 - 3 * 4 / 2")
+	result, _, err := parser.Run(exprPrime, "1 + 2 - 3 * 4 / 2")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
@@ -161,7 +161,7 @@ func TestEvaluateExprPrimeComplex(t *testing.T) {
 
 func TestEvaluateExprSingleDigit(t *testing.T) {
 	expected := 5
-	result, err := parser.Run(expr, "5")
+	result, _, err := parser.Run(expr, "5")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
@@ -169,7 +169,7 @@ func TestEvaluateExprSingleDigit(t *testing.T) {
 
 func TestEvaluateExprPrimeSingleDigit(t *testing.T) {
 	expected := 5
-	result, err := parser.Run(exprPrime, "5")
+	result, _, err := parser.Run(exprPrime, "5")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
@@ -177,7 +177,7 @@ func TestEvaluateExprPrimeSingleDigit(t *testing.T) {
 
 func TestEvaluateExprWhitespace(t *testing.T) {
 	expected := 1 + 2
-	result, err := parser.Run(expr, " 1 + 2 ")
+	result, _, err := parser.Run(expr, " 1 + 2 ")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
@@ -185,7 +185,7 @@ func TestEvaluateExprWhitespace(t *testing.T) {
 
 func TestEvaluateExprPrimeWhitespace(t *testing.T) {
 	expected := 1 + 2
-	result, err := parser.Run(exprPrime, " 1 + 2 ")
+	result, _, err := parser.Run(exprPrime, " 1 + 2 ")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, expected, result)
