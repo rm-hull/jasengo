@@ -11,8 +11,3 @@ type ParseError struct {
 func (e ParseError) Error() string {
 	return fmt.Sprintf("%s at %s", e.Message, e.Loc.String())
 }
-
-func (e ParseError) withFatal(f bool) ParseError {
-	e.Fatal = f
-	return e
-}
