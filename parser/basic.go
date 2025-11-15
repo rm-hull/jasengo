@@ -19,7 +19,7 @@ func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
 		if !pred(r) {
 			return failT[rune]("expected "+desc, st, false, false)
 		}
-		return success[rune](r, st.advanceRune(r, size), true)
+		return success(r, st.advanceRune(r, size), true)
 	}
 }
 
@@ -88,7 +88,7 @@ func StringP(s string) Parser[string] {
 			next = next.advanceRune(r, size)
 		}
 		consumed := len(s) > 0
-		return success[string](s, next, consumed)
+		return success(s, next, consumed)
 	}
 }
 

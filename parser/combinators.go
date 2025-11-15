@@ -58,7 +58,7 @@ func Map[A any, B any](p Parser[A], f func(A) B) Parser[B] {
 				Consumed: r.Consumed,
 			}
 		}
-		return success[B](f(r.Value), r.State, r.Consumed)
+		return success(f(r.Value), r.State, r.Consumed)
 	}
 }
 
