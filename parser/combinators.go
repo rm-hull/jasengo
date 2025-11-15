@@ -15,10 +15,7 @@ func Bind[A any, B any](p Parser[A], f func(A) Parser[B]) Parser[B] {
 		r := p(st)
 
 		if r.Err != nil {
-			// Make *any* error fatal — even when p consumed nothing
-			e := *r.Err
-			e.Fatal = true
-			return Result[B]{Err: &e, State: r.State, Consumed: r.Consumed}
+			return Result[B]{Err: r.Err, State: r.State, Consumed: r.Consumed}
 		}
 
 		// now run the second parser
@@ -32,6 +29,11 @@ func Attempt[T any](p Parser[T]) Parser[T] {
 	return func(st State) Result[T] {
 		r := p(st)
 		if r.Err != nil {
+			if r.Err.Fatal {
+				// If the error is fatal, propagate it immediately.
+				return r
+			}
+			// For non-fatal errors, perform the rollback.
 			pe := *r.Err
 			pe.Loc = st.Loc
 			pe.Fatal = false
@@ -74,17 +76,19 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 	return func(st State) Result[[]T] {
 		var out []T
 		cur := st
+		consumed := false
 		for {
 			r := p(cur)
 			if r.Err != nil {
 				if r.Err.Fatal {
-					return Result[[]T]{Err: r.Err, State: r.State}
+					return Result[[]T]{Err: r.Err, State: r.State, Consumed: consumed || r.Consumed}
 				}
-				return success(out, cur, true)
+				return success(out, cur, consumed)
 			}
 			if r.State.Loc.Index == cur.Loc.Index {
-				return failT[[]T]("Many: zero-width parser", cur, true, false)
+				return failT[[]T]("Many: zero-width parser", cur, true, consumed)
 			}
+			consumed = consumed || r.Consumed
 			out = append(out, r.Value)
 			cur = r.State
 		}
