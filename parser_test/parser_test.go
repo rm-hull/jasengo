@@ -143,7 +143,7 @@ func TestChoice(t *testing.T) {
 	})
 }
 
-func TestChoice_pickBestError(t *testing.T) {
+func TestChoice_ErrorScenarios(t *testing.T) {
 	// Helper to create a parser that fails at a specific column with a given fatal status
 	// This helper uses existing parsers to advance the state and then fail.
 	failingParserAtCol := func(msg string, col int, fatal bool) parser.Parser[rune] {
