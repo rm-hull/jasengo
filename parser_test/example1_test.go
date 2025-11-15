@@ -14,7 +14,7 @@ import (
 //    searchAnd  ::= searchTerm [ AND searchTerm ]...
 //    searchTerm ::= [NOT] ( singleWord | quotedString | '(' searchExpr ')' )
 
-func TestSearchGrammar(t *testing.T) {
+func TestWorkedExample1(t *testing.T) {
 	// Forward declaration for recursive parser
 	var searchExpr parser.Parser[any]
 
