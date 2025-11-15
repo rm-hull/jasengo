@@ -37,12 +37,12 @@ func divOp(x, y int) int {
 	return x / y
 }
 
-// digit parses a single digit and returns its integer value.
-var digit = parser.Map(
-	parser.Token(parser.Satisfy(digitPredicate, "digit")),
-	func(r rune) int {
-		s := string(r)
-		i, _ := strconv.Atoi(s)
+// integer parses one or more digits and returns the integer value.
+var integer = parser.Map(
+	parser.Token(parser.Many1(parser.Satisfy(digitPredicate, "digit"))),
+	func(runes []rune) int {
+		s := string(runes)
+		i, _ := strconv.Atoi(s) // Error can be ignored as Satisfy ensures they are digits.
 		return i
 	},
 )
@@ -53,7 +53,7 @@ var term parser.Parser[int]
 
 // factor parses a digit or an expression in parentheses.
 var factor = parser.Choice(
-	digit,
+	integer,
 	parser.Between(parser.Symbol("("), parser.Rec(&expr), parser.Symbol(")")),
 )
 
