@@ -95,4 +95,4 @@ func main() {
 
 ## API Documentation
 
-See: https://pkg.go.dev/github.com/rm-hull/jasengo
+See: https://pkg.go.dev/github.com/rm-hull/jasengo/parser#Parser
