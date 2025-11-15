@@ -113,13 +113,13 @@ func Optional[T any](p Parser[T]) Parser[*T] {
 		r := p(st)
 		if r.Err != nil {
 			if r.Err.Fatal {
-				return Result[*T]{Err: r.Err, State: r.State}
+				return Result[*T]{Err: r.Err, State: r.State, Consumed: r.Consumed}
 			}
-			return success[*T](nil, st, true)
+			return success[*T](nil, st, false)
 		}
 		v := new(T)
 		*v = r.Value
-		return success(v, r.State, true)
+		return success(v, r.State, r.Consumed)
 	}
 }
 
