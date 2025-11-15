@@ -7,8 +7,8 @@ type Result[T any] struct {
 	Consumed bool
 }
 
-func (result *Result[T]) IsSuccess() bool {
-	return result.Error == nil
+func (res *Result[T]) IsSuccess() bool {
+	return res.Error == nil
 }
 
 func success[T any](v T, st State, consumed bool) Result[T] {

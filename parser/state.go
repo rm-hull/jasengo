@@ -11,7 +11,7 @@ type Location struct {
 	Col   int
 }
 
-func (l Location) String() string {
+func (l *Location) String() string {
 	return "line " + strconv.Itoa(l.Line) + " col " + strconv.Itoa(l.Col)
 }
 
@@ -27,7 +27,7 @@ func NewState(s string) State {
 	}
 }
 
-func (st State) advanceRune(r rune, size int) State {
+func (st *State) advanceRune(r rune, size int) *State {
 	index := st.Loc.Index + size
 	line := st.Loc.Line
 	col := st.Loc.Col
@@ -39,13 +39,13 @@ func (st State) advanceRune(r rune, size int) State {
 		col++
 	}
 
-	return State{
+	return &State{
 		Input: st.Input,
 		Loc:   Location{Index: index, Line: line, Col: col},
 	}
 }
 
-func (st State) currentRune() (rune, int, bool) {
+func (st *State) currentRune() (rune, int, bool) {
 	if st.Loc.Index >= len(st.Input) {
 		return 0, 0, false
 	}
@@ -53,6 +53,6 @@ func (st State) currentRune() (rune, int, bool) {
 	return r, size, true
 }
 
-func (st State) Remaining() string {
+func (st *State) Remaining() string {
 	return st.Input[st.Loc.Index:]
 }
