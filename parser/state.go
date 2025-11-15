@@ -40,15 +40,15 @@ func (st State) advanceRune(r rune, size int) State {
 	}
 
 	return State{
-		Input: st.Input[size:],
+		Input: st.Input,
 		Loc:   Location{Index: index, Line: line, Col: col},
 	}
 }
 
 func (st State) currentRune() (rune, int, bool) {
-	if len(st.Input) == 0 {
+	if st.Loc.Index >= len(st.Input) {
 		return 0, 0, false
 	}
-	r, size := utf8.DecodeRuneInString(st.Input)
+	r, size := utf8.DecodeRuneInString(st.Input[st.Loc.Index:])
 	return r, size, true
 }

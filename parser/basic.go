@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"unicode"
 )
 
@@ -40,7 +41,7 @@ func Digit() Parser[rune] {
 
 func StringP(s string) Parser[string] {
 	return func(st State) Result[string] {
-		if len(st.Input) < len(s) || st.Input[:len(s)] != s {
+		if !strings.HasPrefix(st.Input[st.Loc.Index:], s) {
 			return failT[string]("expected "+strconv.Quote(s), st, false, false)
 		}
 
@@ -56,7 +57,7 @@ func StringP(s string) Parser[string] {
 
 func EOF() Parser[struct{}] {
 	return func(st State) Result[struct{}] {
-		if len(st.Input) == 0 {
+		if st.Loc.Index >= len(st.Input) {
 			return success(struct{}{}, st, false)
 		}
 		// The EOF parser should not report that it has consumed input,
