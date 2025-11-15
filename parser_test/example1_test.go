@@ -1,6 +1,7 @@
 package parser_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/rm-hull/jasengo/parser"
@@ -14,11 +15,25 @@ import (
 //    searchAnd  ::= searchTerm [ AND searchTerm ]...
 //    searchTerm ::= [NOT] ( singleWord | quotedString | '(' searchExpr ')' )
 
+func buildExprParser(term parser.Parser[any], op string) parser.Parser[any] {
+	opParser := parser.Right(parser.Symb(op), term)
+	return parser.Bind(term, func(first any) parser.Parser[any] {
+		return parser.Map(parser.Many(opParser), func(rest []any) any {
+			if len(rest) == 0 {
+				return first
+			}
+			result := []any{strings.ToUpper(op), first}
+			result = append(result, rest...)
+			return result
+		})
+	})
+}
+
 func TestWorkedExample1(t *testing.T) {
 	// Forward declaration for recursive parser
 	var searchExpr parser.Parser[any]
 
-	alphaNum := parser.Choice(parser.Lower(), parser.Digit())
+	alphaNum := parser.Choice(parser.Lower(), parser.Upper(), parser.Digit())
 
 	singleWord := parser.Token(parser.Many1(alphaNum))
 
@@ -39,8 +54,8 @@ func TestWorkedExample1(t *testing.T) {
 		func(not *string) parser.Parser[any] {
 			return parser.Bind(
 				parser.Choice(
-parser.Map(singleWord, func(v []rune) any { return string(v) }),
-parser.Map(quotedString, func(v []rune) any { return string(v) }),
+					parser.Map(singleWord, func(v []rune) any { return string(v) }),
+					parser.Map(quotedString, func(v []rune) any { return string(v) }),
 					bracketedExpr,
 				),
 				func(term any) parser.Parser[any] {
@@ -53,27 +68,8 @@ parser.Map(quotedString, func(v []rune) any { return string(v) }),
 		},
 	)
 
-	searchAnd := parser.Bind(searchTerm, func(first any) parser.Parser[any] {
-		return parser.Map(parser.Many(parser.Right(parser.Symb("and"), searchTerm)), func(rest []any) any {
-			if len(rest) == 0 {
-				return first
-			}
-			result := []any{"AND", first}
-			result = append(result, rest...)
-			return result
-		})
-	})
-
-	searchExpr = parser.Bind(searchAnd, func(first any) parser.Parser[any] {
-		return parser.Map(parser.Many(parser.Right(parser.Symb("or"), searchAnd)), func(rest []any) any {
-			if len(rest) == 0 {
-				return first
-			}
-			result := []any{"OR", first}
-			result = append(result, rest...)
-			return result
-		})
-	})
+	searchAnd := buildExprParser(searchTerm, "and")
+	searchExpr = buildExprParser(searchAnd, "or")
 
 	fullParser := parser.Left(searchExpr, parser.EOF())
 

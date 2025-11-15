@@ -44,7 +44,7 @@ func Lower() Parser[rune] {
 }
 
 func Upper() Parser[rune] {
-	return Satisfy(unicode.IsUpper, "upperrcase letter")
+	return Satisfy(unicode.IsUpper, "uppercase letter")
 }
 
 func Whitespace() Parser[[]rune] {
