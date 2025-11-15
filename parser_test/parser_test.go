@@ -107,3 +107,32 @@ func TestCommitPreventsBacktracking(t *testing.T) {
 	_, err := parser.Run(choice, "az")
 	assert.NotNil(t, err)
 }
+
+func TestWhitespace(t *testing.T) {
+	p := parser.Whitespace()
+
+	// Test with only spaces
+	v, err := parser.Run(p, "   abc")
+	assert.Nil(t, err)
+	assert.Equal(t, []rune{' ', ' ', ' '}, v)
+
+	// Test with tabs, newlines, carriage returns
+	v, err = parser.Run(p, "\t\n\rxyz")
+	assert.Nil(t, err)
+	assert.Equal(t, []rune{'\t', '\n', '\r'}, v)
+
+	// Test with mixed whitespace
+	v, err = parser.Run(p, " \t\n\r abc")
+	assert.Nil(t, err)
+	assert.Equal(t, []rune{' ', '\t', '\n', '\r', ' '}, v)
+
+	// Test with no whitespace
+	v, err = parser.Run(p, "abc")
+	assert.Nil(t, err)
+	assert.Empty(t, v)
+
+	// Test with whitespace followed by non-whitespace (should only parse whitespace)
+	v, err = parser.Run(p, "  hello")
+	assert.Nil(t, err)
+	assert.Equal(t, []rune{' ', ' '}, v)
+}

@@ -39,6 +39,24 @@ func Digit() Parser[rune] {
 	return Satisfy(unicode.IsDigit, "digit")
 }
 
+func Lower() Parser[rune] {
+	return Satisfy(unicode.IsLower, "lowercase letter")
+}
+
+func Upper() Parser[rune] {
+	return Satisfy(unicode.IsUpper, "uppercase letter")
+}
+
+func Whitespace() Parser[[]rune] {
+	return Many(OneOf(" \t\n\r"))
+}
+
+func Return[T any](v T) Parser[T] {
+	return func(st State) Result[T] {
+		return success(v, st, false)
+	}
+}
+
 func StringP(s string) Parser[string] {
 	return func(st State) Result[string] {
 		if !strings.HasPrefix(st.Input[st.Loc.Index:], s) {
