@@ -8,6 +8,6 @@ type ParseError struct {
 	Fatal   bool
 }
 
-func (e ParseError) Error() string {
+func (e *ParseError) Error() string {
 	return fmt.Sprintf("%s at %s", e.Message, e.Loc.String())
 }

@@ -11,7 +11,7 @@ import (
 // satisfies the given predicate function. It consumes the rune if successful.
 // The `desc` parameter is used for error reporting.
 func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
-	return func(st State) Result[rune] {
+	return func(st *State) Result[rune] {
 		r, size, ok := st.currentRune()
 		if !ok {
 			return failT[rune]("unexpected EOF ("+desc+")", st, false, false)
@@ -75,7 +75,7 @@ func Whitespace() Parser[[]rune] {
 // Return creates a parser that always succeeds without consuming any input,
 // and returns the given value `v`.
 func Return[T any](v T) Parser[T] {
-	return func(st State) Result[T] {
+	return func(st *State) Result[T] {
 		return success(v, st, false)
 	}
 }
@@ -83,8 +83,9 @@ func Return[T any](v T) Parser[T] {
 // StringP returns a parser that succeeds if the next input matches the
 // given string `s`. It consumes the matched string if successful.
 func StringP(s string) Parser[string] {
-	return func(st State) Result[string] {
-		if !strings.HasPrefix(st.Input[st.Loc.Index:], s) {
+	return func(st *State) Result[string] {
+		input := *st.Input
+		if !strings.HasPrefix(input[st.Loc.Index:], s) {
 			return failT[string]("expected "+strconv.Quote(s), st, false, false)
 		}
 
@@ -101,8 +102,9 @@ func StringP(s string) Parser[string] {
 // EOF returns a parser that succeeds only if the end of the input
 // has been reached. It does not consume any input.
 func EOF() Parser[struct{}] {
-	return func(st State) Result[struct{}] {
-		if st.Loc.Index >= len(st.Input) {
+	return func(st *State) Result[struct{}] {
+		input := *st.Input
+		if st.Loc.Index >= len(input) {
 			return success(struct{}{}, st, false)
 		}
 		// The EOF parser should not report that it has consumed input,
@@ -115,7 +117,7 @@ func EOF() Parser[struct{}] {
 // Fail returns a parser that always fails with the given message.
 // It does not consume any input.
 func Fail[T any](msg string) Parser[T] {
-	return func(st State) Result[T] {
+	return func(st *State) Result[T] {
 		return failT[T](msg, st, false, false)
 	}
 }

@@ -40,7 +40,7 @@ func Symbol(s string) Parser[string] {
 // It takes a pointer to a Parser and defers its evaluation,
 // enabling the construction of parsers for recursive grammars.
 func Rec[T any](p *Parser[T]) Parser[T] {
-	return func(st State) Result[T] {
+	return func(st *State) Result[T] {
 		return (*p)(st)
 	}
 }
@@ -49,7 +49,7 @@ func Rec[T any](p *Parser[T]) Parser[T] {
 // If `p` succeeds with a value of type `A`, `f` is applied to that value
 // to produce a new value of type `B`.
 func Map[A any, B any](p Parser[A], f func(A) B) Parser[B] {
-	return func(st State) Result[B] {
+	return func(st *State) Result[B] {
 		r := p(st)
 		if r.Error != nil {
 			return Result[B]{
@@ -74,7 +74,7 @@ func ToAny[T any](p Parser[T]) Parser[any] {
 // which returns a new parser. This new parser is then run with the
 // remaining input.
 func Bind[A any, B any](p Parser[A], f func(A) Parser[B]) Parser[B] {
-	return func(st State) Result[B] {
+	return func(st *State) Result[B] {
 		r := p(st)
 
 		if r.Error != nil {
@@ -98,7 +98,7 @@ func Bind[A any, B any](p Parser[A], f func(A) Parser[B]) Parser[B] {
 // might consume input before failing, preventing subsequent alternatives
 // from being tried.
 func Attempt[T any](p Parser[T]) Parser[T] {
-	return func(st State) Result[T] {
+	return func(st *State) Result[T] {
 		r := p(st)
 		if r.Error != nil {
 			if r.Error.Fatal {
@@ -125,7 +125,7 @@ func Attempt[T any](p Parser[T]) Parser[T] {
 // point is reached, improving error reporting by pinpointing the
 // exact location of a syntax error.
 func Commit[T any](p Parser[T]) Parser[T] {
-	return func(st State) Result[T] {
+	return func(st *State) Result[T] {
 		r := p(st)
 		if r.Error != nil {
 			pe := *r.Error
@@ -145,7 +145,7 @@ func Commit[T any](p Parser[T]) Parser[T] {
 // If all parsers fail, it returns the best error encountered (the one
 // furthest into the input, or a fatal error if one occurred).
 func Choice[T any](ps ...Parser[T]) Parser[T] {
-	return func(st State) Result[T] {
+	return func(st *State) Result[T] {
 		var best *ParseError
 		var consumed bool
 		for _, p := range ps {
@@ -171,7 +171,7 @@ func Choice[T any](ps ...Parser[T]) Parser[T] {
 // It collects all successful results into a slice of interface{}.
 // If any parser in the sequence fails, the entire sequence fails.
 func Sequence(ps ...Parser[any]) Parser[[]any] {
-	return func(st State) Result[[]any] {
+	return func(st *State) Result[[]any] {
 		var results []any
 		currentState := st
 		consumed := false
@@ -197,7 +197,7 @@ func Sequence(ps ...Parser[any]) Parser[[]any] {
 // It collects all successful results into a slice.
 // It always succeeds, returning an empty slice if `p` never succeeds.
 func Many[T any](p Parser[T]) Parser[[]T] {
-	return func(st State) Result[[]T] {
+	return func(st *State) Result[[]T] {
 		var out []T
 		cur := st
 		consumed := false
@@ -227,7 +227,7 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 // It collects all successful results into a slice.
 // It fails if `p` does not succeed at least once.
 func Many1[T any](p Parser[T]) Parser[[]T] {
-	return func(st State) Result[[]T] {
+	return func(st *State) Result[[]T] {
 		r := Many(p)(st)
 		if r.Error != nil {
 			return r
@@ -244,7 +244,7 @@ func Many1[T any](p Parser[T]) Parser[[]T] {
 // input, it succeeds and returns `nil`. If `p` fails after consuming
 // input, or with a fatal error, Optional fails.
 func Optional[T any](p Parser[T]) Parser[*T] {
-	return func(st State) Result[*T] {
+	return func(st *State) Result[*T] {
 		r := p(st)
 		if r.Error != nil {
 			if r.Error.Fatal {
@@ -277,7 +277,7 @@ func SepBy1[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 // It returns a slice of the results of `p`.
 // It always succeeds, returning an empty slice if `p` never succeeds.
 func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
-	return func(st State) Result[[]T] {
+	return func(st *State) Result[[]T] {
 		r := p(st)
 		if r.Error != nil {
 			if r.Error.Fatal || r.Consumed {
@@ -331,7 +331,7 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 // `ChainL` associates the operations to the left.
 // For example, `p op p op p` would be parsed as `((v1 op v2) op v3)`.
 func ChainL[A any](p Parser[A], op Parser[func(A, A) A]) Parser[A] {
-	return func(st State) Result[A] {
+	return func(st *State) Result[A] {
 		res := p(st)
 		if res.Error != nil {
 			return res
