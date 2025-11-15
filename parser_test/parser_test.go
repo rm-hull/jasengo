@@ -104,6 +104,6 @@ func TestCommitPreventsBacktracking(t *testing.T) {
 
 	choice := parser.Choice(ax, parser.Char('b'))
 
-	_, err := parser.Run(choice, "b")
+	_, err := parser.Run(choice, "az")
 	assert.NotNil(t, err)
 }
