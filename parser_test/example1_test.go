@@ -82,65 +82,20 @@ func TestWorkedExample1(t *testing.T) {
 	// Test cases from the Clojure example
 	testCases := []struct {
 		input    string
-		expected ast.Node
+		expected string
 	}{
-		{
-			"wood and blue or red",
-			ast.OrNode{Operands: []ast.Node{
-				ast.AndNode{Operands: []ast.Node{
-					ast.TermNode{Value: "wood"},
-					ast.TermNode{Value: "blue"},
-				}},
-				ast.TermNode{Value: "red"},
-			}},
-		},
-		{
-			"wood and (blue or red)",
-			ast.AndNode{Operands: []ast.Node{
-				ast.TermNode{Value: "wood"},
-				ast.OrNode{Operands: []ast.Node{
-					ast.TermNode{Value: "blue"},
-					ast.TermNode{Value: "red"},
-				}},
-			}},
-		},
-		{
-			"(steel or iron) and \"lime green\"",
-			ast.AndNode{Operands: []ast.Node{
-				ast.OrNode{Operands: []ast.Node{
-					ast.TermNode{Value: "steel"},
-					ast.TermNode{Value: "iron"},
-				}},
-				ast.TermNode{Value: "lime green"},
-			}},
-		},
-		{
-			"not steel or iron and \"lime green\"",
-			ast.OrNode{Operands: []ast.Node{
-				ast.NotNode{Operand: ast.TermNode{Value: "steel"}},
-				ast.AndNode{Operands: []ast.Node{
-					ast.TermNode{Value: "iron"},
-					ast.TermNode{Value: "lime green"},
-				}},
-			}},
-		},
-		{
-			"not(steel or iron) and \"lime green\"",
-			ast.AndNode{Operands: []ast.Node{
-				ast.NotNode{Operand: ast.OrNode{Operands: []ast.Node{
-					ast.TermNode{Value: "steel"},
-					ast.TermNode{Value: "iron"},
-				}}},
-				ast.TermNode{Value: "lime green"},
-			}},
-		},
+		{"wood and blue or red", "(OR (AND wood blue) red)"},
+		{"wood and (blue or red)", "(AND wood (OR blue red))"},
+		{"(steel or iron) and \"lime green\"", "(AND (OR steel iron) \"lime green\")"},
+		{"not steel or iron and \"lime green\"", "(OR (NOT steel) (AND iron \"lime green\"))"},
+		{"not(steel or iron) and \"lime green\"", "(AND (NOT (OR steel iron)) \"lime green\")"},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.input, func(t *testing.T) {
 			result, err := parser.Run(fullParser, tc.input)
 			assert.Nil(t, err)
-			assert.Equal(t, tc.expected, result)
+			assert.Equal(t, tc.expected, result.ToString())
 		})
 	}
 
