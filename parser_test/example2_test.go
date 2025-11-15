@@ -77,8 +77,8 @@ func init() {
 }
 
 func TestEvaluateExpr(t *testing.T) {
-	// (4 + (1 - (2 * 3))) = 4 + (1 - 6) = 4 + (-5) = -1
-	expected := 4 + (1 - (2 * 3)) // => -1
+	// With left-associativity, "1 - 2 * 3 + 4" is evaluated as ((1 - (2*3)) + 4) = -1.
+	expected := -1
 	result, err := parser.Run(expr, " 1 - 2 * 3 + 4 ")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
