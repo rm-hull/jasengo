@@ -25,7 +25,7 @@ func failT[T any](msg string, st *State, fatal bool, consumed bool, cause error)
 		Consumed: consumed,
 		Error: &ParseError{
 			Message: msg,
-			Loc:     st.Input.CurrentLocation(),
+			Loc:     st.Location(),
 			Fatal:   fatal,
 			Cause:   cause,
 		},
