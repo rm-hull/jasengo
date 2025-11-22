@@ -24,7 +24,6 @@ func NewRingBuffer[T any](capacity int) *RingBuffer[T] {
 		size:     0,
 	}
 }
-}
 
 // Write adds an element to the ring buffer. If the buffer is full, it overwrites
 // the oldest element.
