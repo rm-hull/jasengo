@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 )
 
@@ -9,8 +10,6 @@ import (
 type Reader interface {
 	// Read reads the next rune from the input stream.
 	Read() (rune, error)
-	// Unread moves the reader's position back by one rune.
-	Unread()
 	// Pos returns the current reader position.
 	Pos() int
 	// Slice returns a string slice of the runes that have been read so far
@@ -99,18 +98,7 @@ func (rb *runeBuffer) Read() (rune, error) {
 	return r, nil
 }
 
-// Unread moves the reader's position back by one rune, as long as it's not at
-// the beginning of the current buffer window.
-// NOTE: Unread does not correctly rollback Line/Col. Use Checkpoint/Rollback for accurate position restoration.
-func (rb *runeBuffer) Unread() {
-	if rb.pos > rb.bufferOffset {
-		rb.pos--
-		// Cannot reliably rollback Line/Col with just unread without knowing the previous rune.
-		// This is where Checkpoint/Rollback comes in for full location restoration.
-		// However, we must ensure loc.Index stays consistent with rb.pos.
-		rb.loc.Index--
-	}
-}
+
 
 // Pos returns the current reader position.
 func (rb *runeBuffer) Pos() int {
