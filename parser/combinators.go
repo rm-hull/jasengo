@@ -114,7 +114,7 @@ func Attempt[T any](p Parser[T]) Parser[T] {
 				}
 			}
 			pe := *r.Error
-			pe.Loc = st.Loc
+			pe.Loc = st.Input.CurrentLocation()
 			pe.Fatal = false
 			return Result[T]{
 				Error:    &pe,
@@ -220,7 +220,10 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 		cur := st
 		consumed := false
 		for {
-			r := p(cur)
+			checkpoint := cur.Input.Checkpoint() // Capture state before trying p
+
+			r := p(cur) // p operates on cur, mutating cur.Input if it consumes.
+
 			if r.Error != nil {
 				if r.Error.Fatal {
 					return Result[[]T]{
@@ -229,14 +232,26 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 						Consumed: consumed || r.Consumed,
 					}
 				}
+				// Non-fatal error, rollback to before this attempt.
+				if err := cur.Input.Rollback(checkpoint); err != nil {
+					return Result[[]T]{
+						Error:    err.(*ParseError).ToFatal(),
+						State:    cur, // Use current state as rollback failed
+						Consumed: consumed,
+					}
+				}
 				return success(out, cur, consumed)
 			}
-			if r.State.Loc.Index == cur.Loc.Index {
+			
+			// If inner parser succeeded but consumed no input
+			// Compare the location *after* parsing with the location *before* parsing.
+			if r.State.Location().Index == checkpoint.Index { // Here, checkpoint.Index is cur.Location().Index before p(cur)
 				return failT[[]T]("Many: zero-width parser", cur, true, consumed)
 			}
+			
 			consumed = consumed || r.Consumed
 			out = append(out, r.Value)
-			cur = r.State
+			cur = r.State // cur has already been mutated by p(cur), but r.State points to the same object.
 		}
 	}
 }

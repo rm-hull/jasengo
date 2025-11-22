@@ -60,7 +60,7 @@ func TestRuneBufferLimit(t *testing.T) {
 	reader.Unread() // pos = 4 (at 'd')
 	r, _ := reader.Read() // e
 	assert.Equal(t, 'e', r)
-	assert.Equal(t, 5, reader.Pos())
+	assert.Equal(t, 5, reader.CurrentLocation().Index)
 
 	// Test Checkpoint and Rollback within the window
 	checkpoint := reader.Checkpoint() // Current pos is 5
@@ -72,7 +72,7 @@ func TestRuneBufferLimit(t *testing.T) {
 	assert.Equal(t, "efg", reader.Slice(4, 7)) // Slice from absolute pos 4 to 7 should be "efg"
 
 	reader.Rollback(checkpoint) // Rollback to 5
-	assert.Equal(t, 5, reader.Pos())
+	assert.Equal(t, 5, reader.CurrentLocation().Index)
 	// After rollback, the buffer should still be consistent with the window at pos 5
 	// Read 'f' again
 	r6_again, _ := reader.Read() // f
@@ -129,11 +129,11 @@ func TestRuneBufferRollbackError(t *testing.T) {
 	// rb.bufferOffset = 2
 	// rb.buffer = ['c'] (absolute position 2)
 
-	err := reader.Rollback(0)
+	err := reader.Rollback(parser.Location{Index: 0, Line: 0, Col: 0})
 	assert.Error(t, err, "Should return an error when rolling back outside buffer window")
 	assert.IsType(t, &parser.ParseError{}, err)
 
-	err = reader.Rollback(1)
+	err = reader.Rollback(parser.Location{Index: 1, Line: 0, Col: 0})
 	assert.Error(t, err, "Should return an error when rolling back outside buffer window")
 	assert.IsType(t, &parser.ParseError{}, err)
 }
@@ -147,9 +147,9 @@ func TestRuneBufferUnreadBoundary(t *testing.T) {
 	// Current state: pos=2, bufferOffset=1, buffer=['b']
 
 	reader.Unread() // pos=1
-	assert.Equal(t, 1, reader.Pos())
+	assert.Equal(t, 1, reader.CurrentLocation().Index)
 
 	// Attempt to unread again, should not go below bufferOffset (1)
 	reader.Unread() // pos should remain 1
-	assert.Equal(t, 1, reader.Pos())
+	assert.Equal(t, 1, reader.CurrentLocation().Index)
 }

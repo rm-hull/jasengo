@@ -16,7 +16,7 @@ func success[T any](v T, st *State, consumed bool) Result[T] {
 }
 
 func failT[T any](msg string, st *State, fatal bool, consumed bool) Result[T] {
-	err := ParseError{Message: msg, Loc: st.Loc, Fatal: fatal}
+	err := ParseError{Message: msg, Loc: st.Input.CurrentLocation(), Fatal: fatal}
 	return Result[T]{Error: &err, State: st, Consumed: consumed}
 }
 
