@@ -116,7 +116,7 @@ func TestRuneBufferSlice(t *testing.T) {
 	assert.Equal(t, "", reader.Slice(5, 2)) // from > to
 }
 
-func TestRuneBufferRollbackPanic(t *testing.T) {
+func TestRuneBufferRollbackError(t *testing.T) {
 	input := "abc"
 	reader := parser.NewReader(strings.NewReader(input), 1) // Limit buffer to 1 rune
 
@@ -129,15 +129,13 @@ func TestRuneBufferRollbackPanic(t *testing.T) {
 	// rb.bufferOffset = 2
 	// rb.buffer = ['c'] (absolute position 2)
 
-	assert.Panics(t, func() {
-		// Attempt to rollback to position 0, which is < rb.bufferOffset (2)
-		reader.Rollback(0)
-	}, "Should panic when rolling back outside buffer window")
+	err := reader.Rollback(0)
+	assert.Error(t, err, "Should return an error when rolling back outside buffer window")
+	assert.IsType(t, &parser.ParseError{}, err)
 
-	assert.Panics(t, func() {
-		// Attempt to rollback to position 1, which is < rb.bufferOffset (2)
-		reader.Rollback(1)
-	}, "Should panic when rolling back outside buffer window")
+	err = reader.Rollback(1)
+	assert.Error(t, err, "Should return an error when rolling back outside buffer window")
+	assert.IsType(t, &parser.ParseError{}, err)
 }
 
 func TestRuneBufferUnreadBoundary(t *testing.T) {

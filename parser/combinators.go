@@ -105,7 +105,14 @@ func Attempt[T any](p Parser[T]) Parser[T] {
 			if r.Error.Fatal {
 				return r
 			}
-			st.Input.Rollback(checkpoint) // Rollback reader state on non-fatal error
+			if err := st.Input.Rollback(checkpoint); err != nil { // Rollback reader state on non-fatal error
+				// If Rollback fails, it's a critical error as parser state is inconsistent
+				return Result[T]{
+					Error:    err.(*ParseError).ToFatal(), // Convert the rollback error to fatal
+					State:    r.State, // Use the state from after the failed parse, as rollback failed
+					Consumed: r.Consumed,
+				}
+			}
 			pe := *r.Error
 			pe.Loc = st.Loc
 			pe.Fatal = false
@@ -160,8 +167,14 @@ func Choice[T any](ps ...Parser[T]) Parser[T] {
 				// No rollback needed, as the reader state should remain advanced.
 				return r
 			}
-			// If non-fatal and did not consume, rollback reader state to before this parser was applied.
-			st.Input.Rollback(checkpoint)
+			if err := st.Input.Rollback(checkpoint); err != nil {
+				// If Rollback fails, it's a critical error as parser state is inconsistent
+				return Result[T]{
+					Error:    err.(*ParseError).ToFatal(), // Convert the rollback error to fatal
+					State:    r.State, // Use the state from after the failed parse, as rollback failed
+					Consumed: consumed || r.Consumed,
+				}
+			}
 			best = pickBestError(best, r.Error)
 		}
 		return Result[T]{
