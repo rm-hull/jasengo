@@ -1,7 +1,6 @@
 package parser
 
 import (
-	_ "io" // Blank import to satisfy type requirement for io.Reader
 	"strings"
 )
 
