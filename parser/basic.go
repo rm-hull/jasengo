@@ -11,8 +11,8 @@ import (
 // The `desc` parameter is used for error reporting.
 func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
 	return func(st *State) Result[rune] {
-		checkpoint := st.Input.Checkpoint() // Capture state before reading
-		
+		checkpoint := st.Input.Checkpoint()
+
 		r, err := st.Input.Read()
 		if err == io.EOF {
 			return failT[rune]("unexpected EOF ("+desc+")", st, false, false)
@@ -22,7 +22,9 @@ func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
 		}
 
 		if !pred(r) {
-			st.Input.Rollback(checkpoint) // Rollback to before reading
+			if err := st.Input.Rollback(checkpoint); err != nil {
+				return failT[rune]("rollback error in Satisfy: " + err.Error(), st, false, false)
+			}
 			return failT[rune]("expected "+desc, st, false, false)
 		}
 		// Predicate succeeded, rune is consumed.
@@ -91,20 +93,26 @@ func Return[T any](v T) Parser[T] {
 // given string `s`. It consumes the matched string if successful.
 func StringP(s string) Parser[string] {
 	return func(st *State) Result[string] {
-		checkpoint := st.Input.Checkpoint() // Capture state before StringP
-		
+		checkpoint := st.Input.Checkpoint()
+
 		for _, expectedRune := range s {
-			actualRune, err := st.Input.Read() // Operate directly on st.Input
+			actualRune, err := st.Input.Read()
 			if err == io.EOF {
-				st.Input.Rollback(checkpoint) // Rollback st.Input
+				if err := st.Input.Rollback(checkpoint); err != nil {
+					return failT[string]("rollback error in StringP (EOF): " + err.Error(), st, false, false)
+				}
 				return failT[string]("expected "+strconv.Quote(s)+", got EOF", st, false, false)
 			}
 			if err != nil {
-				st.Input.Rollback(checkpoint) // Rollback st.Input
+				if err := st.Input.Rollback(checkpoint); err != nil {
+					return failT[string]("rollback error in StringP (read error): " + err.Error(), st, false, false)
+				}
 				return failT[string]("error reading input: "+err.Error(), st, false, false)
 			}
 			if actualRune != expectedRune {
-				st.Input.Rollback(checkpoint) // Rollback st.Input
+				if err := st.Input.Rollback(checkpoint); err != nil {
+					return failT[string]("rollback error in StringP (rune mismatch): " + err.Error(), st, false, false)
+				}
 				return failT[string]("expected "+strconv.Quote(s), st, false, false)
 			}
 			// If successful, st.Input is advanced.
@@ -118,17 +126,21 @@ func StringP(s string) Parser[string] {
 // has been reached. It does not consume any input.
 func EOF() Parser[struct{}] {
 	return func(st *State) Result[struct{}] {
-		checkpoint := st.Input.Checkpoint() // Capture state before reading
-		
-		_, err := st.Input.Read() // Try to read one rune
+		checkpoint := st.Input.Checkpoint()
+
+		_, err := st.Input.Read()
 		if err == io.EOF {
-			st.Input.Rollback(checkpoint) // It's EOF, but we consumed 0, so rollback to original state
+			if err := st.Input.Rollback(checkpoint); err != nil { // It's EOF, but we consumed 0, so rollback to original state
+				return failT[struct{}]("rollback error in EOF (EOF): " + err.Error(), st, false, false)
+			}
 			return success(struct{}{}, st, false)
 		}
-		
+
 		// If we reach here, it's not EOF, so we just tried to read a character.
 		// Rollback to original state and fail.
-		st.Input.Rollback(checkpoint)
+		if err := st.Input.Rollback(checkpoint); err != nil {
+			return failT[struct{}]("rollback error in EOF (not EOF): " + err.Error(), st, false, false)
+		}
 		return failT[struct{}]("expected EOF", st, false, false)
 	}
 }

@@ -109,7 +109,7 @@ func Attempt[T any](p Parser[T]) Parser[T] {
 				// If Rollback fails, it's a critical error as parser state is inconsistent
 				return Result[T]{
 					Error:    err.(*ParseError).ToFatal(), // Convert the rollback error to fatal
-					State:    r.State, // Use the state from after the failed parse, as rollback failed
+					State:    r.State,                     // Use the state from after the failed parse, as rollback failed
 					Consumed: r.Consumed,
 				}
 			}
@@ -156,7 +156,7 @@ func Choice[T any](ps ...Parser[T]) Parser[T] {
 		var best *ParseError
 		var consumed bool
 		for _, p := range ps {
-			checkpoint := st.Input.Checkpoint() // Checkpoint reader state before trying parser
+			checkpoint := st.Input.Checkpoint()
 			r := p(st)
 			if r.Error == nil {
 				return r
@@ -168,10 +168,10 @@ func Choice[T any](ps ...Parser[T]) Parser[T] {
 				return r
 			}
 			if err := st.Input.Rollback(checkpoint); err != nil {
-				// If Rollback fails, it's a critical error as parser state is inconsistent
 				return Result[T]{
-					Error:    err.(*ParseError).ToFatal(), // Convert the rollback error to fatal
-					State:    r.State, // Use the state from after the failed parse, as rollback failed
+					// If Rollback fails, it's a critical error as parser state is inconsistent
+					Error:    err.(*ParseError).ToFatal(),
+					State:    r.State,
 					Consumed: consumed || r.Consumed,
 				}
 			}
@@ -220,7 +220,7 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 		cur := st
 		consumed := false
 		for {
-			checkpoint := cur.Input.Checkpoint() // Capture state before trying p
+			checkpoint := cur.Input.Checkpoint()
 
 			r := p(cur) // p operates on cur, mutating cur.Input if it consumes.
 
@@ -242,13 +242,13 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 				}
 				return success(out, cur, consumed)
 			}
-			
+
 			// If inner parser succeeded but consumed no input
 			// Compare the location *after* parsing with the location *before* parsing.
 			if r.State.Location().Index == checkpoint.Index { // Here, checkpoint.Index is cur.Location().Index before p(cur)
 				return failT[[]T]("Many: zero-width parser", cur, true, consumed)
 			}
-			
+
 			consumed = consumed || r.Consumed
 			out = append(out, r.Value)
 			cur = r.State // cur has already been mutated by p(cur), but r.State points to the same object.

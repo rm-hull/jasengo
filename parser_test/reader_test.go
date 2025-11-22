@@ -29,7 +29,8 @@ func TestRuneBufferNoLimit(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, io.EOF, err)
 
-	reader.Rollback(checkpoint) // Rollback to 7
+	err = reader.Rollback(checkpoint) // Rollback to 7
+	assert.NoError(t, err)
 	assert.Equal(t, 7, reader.CurrentLocation().Index)
 	// Read 'g' again
 	_, err = reader.Read()
@@ -69,7 +70,8 @@ func TestRuneBufferLimit(t *testing.T) {
 	rf, _ := reader.Read() // f
 	assert.Equal(t, 'f', rf)
 	assert.Equal(t, 6, reader.CurrentLocation().Index)
-	reader.Rollback(checkpointBeforeF) // Rollback to 5
+	err := reader.Rollback(checkpointBeforeF) // Rollback to 5
+	assert.NoError(t, err)
 	assert.Equal(t, 5, reader.CurrentLocation().Index)
 	rf_again, _ := reader.Read() // f again
 	assert.Equal(t, 'f', rf_again)
@@ -85,7 +87,8 @@ func TestRuneBufferLimit(t *testing.T) {
 	assert.Equal(t, 3, reader.BufferedLength()) // Buffer should contain 3 runes (efg)
 	assert.Equal(t, "efg", reader.Slice(4, 7)) // Slice from absolute pos 4 to 7 should be "efg"
 
-	reader.Rollback(checkpoint) // Rollback to 6
+	err = reader.Rollback(checkpoint) // Rollback to 6
+	assert.NoError(t, err)
 	assert.Equal(t, 6, reader.CurrentLocation().Index)
 	// After rollback, the buffer should still be consistent with the window at pos 6
 	// Read 'g' again
@@ -98,11 +101,16 @@ func TestRuneBufferSlice(t *testing.T) {
 	reader := parser.NewReader(strings.NewReader(input), 3)
 
 	// Read some runes
-	reader.Read() // a
-	reader.Read() // b
-	reader.Read() // c
-	reader.Read() // d
-	reader.Read() // e
+	_, err := reader.Read() // a
+	assert.NoError(t, err)
+	_, err = reader.Read() // b
+	assert.NoError(t, err)
+	_, err = reader.Read() // c
+	assert.NoError(t, err)
+	_, err = reader.Read() // d
+	assert.NoError(t, err)
+	_, err = reader.Read() // e
+	assert.NoError(t, err)
 
 	// At this point:
 	// rb.pos = 5
@@ -136,14 +144,16 @@ func TestRuneBufferRollbackError(t *testing.T) {
 
 	checkpoint0 := reader.Checkpoint() // Index 0, Line 1, Col 1
 
-	reader.Read() // a
+	_, err := reader.Read() // a
+	assert.NoError(t, err)
 	checkpoint1 := reader.Checkpoint() // Index 1, Line 1, Col 2
 
-	reader.Read() // b (a is discarded)
+	_, err = reader.Read() // b (a is discarded)
+	assert.NoError(t, err)
 	// Current state: reader.CurrentLocation().Index = 2, reader.bufferOffset = 1, reader.buffer = ['b']
 
 	// Rollback to checkpoint0 (Index 0) - this should fail because 0 < 1 (bufferOffset)
-	err := reader.Rollback(checkpoint0)
+	err = reader.Rollback(checkpoint0)
 	assert.Error(t, err, "Should return an error when rolling back outside buffer window")
 	assert.IsType(t, &parser.ParseError{}, err)
 
@@ -165,19 +175,24 @@ func TestRuneBufferCheckpointRollbackValid(t *testing.T) {
 	reader := parser.NewReader(strings.NewReader(input), 3) // Limit 3
 
 	// Read some characters to populate the buffer and advance offset
-	reader.Read() // a
-	reader.Read() // b
-	reader.Read() // c (buffer: [a,b,c], offset: 0)
+	_, err := reader.Read() // a
+	assert.NoError(t, err)
+	_, err = reader.Read() // b
+	assert.NoError(t, err)
+	_, err = reader.Read() // c
+	assert.NoError(t, err)
 
 	checkpoint_c := reader.Checkpoint() // Index 3, Line 1, Col 4
 
-	reader.Read() // d (buffer: [b,c,d], offset: 1)
-	reader.Read() // e (buffer: [c,d,e], offset: 2)
+	_, err = reader.Read() // d (buffer: [b,c,d], offset: 1)
+	assert.NoError(t, err)
+	_, err = reader.Read() // e (buffer: [c,d,e], offset: 2)
+	assert.NoError(t, err)
 
 	// Current state: Index 5, Line 1, Col 6, bufferOffset 2
 
 	// Rollback to checkpoint_c (Index 3)
-	err := reader.Rollback(checkpoint_c)
+	err = reader.Rollback(checkpoint_c)
 	assert.NoError(t, err)
 	assert.Equal(t, 3, reader.CurrentLocation().Index)
 	assert.Equal(t, 1, reader.CurrentLocation().Line)
