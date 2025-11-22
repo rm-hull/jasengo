@@ -6,7 +6,7 @@ import (
 )
 
 func Run[T any](p Parser[T], input string) (T, bool, *ParseError) {
-	reader := NewReader(strings.NewReader(input))
+	reader := NewReader(strings.NewReader(input), -1)
 	st := NewState(reader)
 	r := p(st)
 	if r.Error != nil {
