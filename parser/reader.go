@@ -28,11 +28,10 @@ type Reader interface {
 // runeReader implements the Reader interface, using a bufio.Reader and a
 // slice of runes to buffer the input.
 type runeReader struct {
-	reader       *bufio.Reader
-	buffer       buffer.Buffer[rune]
-	limit        int // Maximum size of the circular buffer (used for initialization)
-	bufferOffset int // Absolute index of the rune at 'tail' of ringBuffer (or first element of dynamic buffer)
-	loc          Location
+	reader *bufio.Reader
+	buffer buffer.Buffer[rune]
+	offset int // Absolute index of the rune at 'tail' of ringBuffer (or first element of unbounded buffer)
+	loc    Location
 }
 
 // NewReader creates a new Reader from an io.Reader.
@@ -42,10 +41,9 @@ func NewReader(r io.Reader, limit int) Reader {
 	}
 
 	rr := &runeReader{
-		reader:       bufio.NewReader(r),
-		limit:        limit,
-		bufferOffset: 0,
-		loc:          Location{Index: 0, Line: 1, Col: 1}, // Initialize location
+		reader: bufio.NewReader(r),
+		offset: 0,
+		loc:    Location{Index: 0, Line: 1, Col: 1}, // Initialize location
 	}
 
 	if limit > 0 {
@@ -71,7 +69,7 @@ func (rr *runeReader) Read() (rune, error) {
 	var err error
 
 	// Check if the rune is already in the buffer
-	logicalIndex := rr.loc.Index - rr.bufferOffset
+	logicalIndex := rr.loc.Index - rr.offset
 	if logicalIndex >= 0 && logicalIndex < rr.buffer.Length() {
 		r, err = rr.buffer.Read(logicalIndex)
 		if err != nil {
@@ -90,7 +88,7 @@ func (rr *runeReader) Read() (rune, error) {
 
 	// If buffer is full, bufferOffset must advance with the ring buffer's tail
 	if rr.buffer.IsFull() {
-		rr.bufferOffset++
+		rr.offset++
 	}
 	rr.buffer.Write(r)
 
@@ -112,8 +110,8 @@ func (rr *runeReader) advanceLocation(r rune) {
 // Slice returns a string slice of the runes that have been read so far between
 // the 'from' and 'to' positions.
 func (rr *runeReader) Slice(from, to int) string {
-	bufferFrom := from - rr.bufferOffset
-	bufferTo := to - rr.bufferOffset
+	bufferFrom := from - rr.offset
+	bufferTo := to - rr.offset
 
 	return string(rr.buffer.Slice(bufferFrom, bufferTo))
 }
@@ -130,7 +128,7 @@ func (rr *runeReader) Checkpoint() Location {
 
 // Rollback restores the reader to the state represented by the checkpoint.
 func (rr *runeReader) Rollback(checkpoint Location) error {
-	if checkpoint.Index < rr.bufferOffset {
+	if checkpoint.Index < rr.offset {
 		return &ParseError{
 			Message: fmt.Sprintf("cannot rollback to position %d: outside current buffer window", checkpoint.Index),
 			Loc:     checkpoint,
