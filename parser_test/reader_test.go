@@ -25,7 +25,7 @@ func TestRuneBufferNoLimit(t *testing.T) {
 
 	// Test Checkpoint and Rollback
 	checkpoint := reader.Checkpoint() // Current pos is 7
-	_, err := reader.Read() // This will be EOF
+	_, err := reader.Read()           // This will be EOF
 	assert.Error(t, err)
 	assert.Equal(t, io.EOF, err)
 
@@ -50,24 +50,24 @@ func TestRuneBufferLimit(t *testing.T) {
 	assert.Equal(t, 'b', r2)
 	assert.Equal(t, 'c', r3)
 	assert.Equal(t, 3, reader.BufferedLength()) // Buffer should contain 3 runes
-	assert.Equal(t, "abc", reader.Slice(0, 3)) // Slice from absolute pos 0 to 3
+	assert.Equal(t, "abc", reader.Slice(0, 3))  // Slice from absolute pos 0 to 3
 
 	// Read another rune, 'd'. 'a' should be discarded from internal buffer
 	r4, _ := reader.Read() // d
 	assert.Equal(t, 'd', r4)
 	assert.Equal(t, 3, reader.BufferedLength()) // Buffer should still contain 3 runes
-	assert.Equal(t, "bcd", reader.Slice(1, 4)) // Slice from absolute pos 1 to 4 should be "bcd"
+	assert.Equal(t, "bcd", reader.Slice(1, 4))  // Slice from absolute pos 1 to 4 should be "bcd"
 
 	// Read another rune, 'e'. 'b' should be discarded from internal buffer
 	r5, _ := reader.Read() // e
 	assert.Equal(t, 'e', r5)
 	assert.Equal(t, 3, reader.BufferedLength()) // Buffer should still contain 3 runes
-	assert.Equal(t, "cde", reader.Slice(2, 5)) // Slice from absolute pos 2 to 5 should be "cde"
+	assert.Equal(t, "cde", reader.Slice(2, 5))  // Slice from absolute pos 2 to 5 should be "cde"
 
 	// Test Checkpoint and Rollback for unreading behavior (simulated)
 	// Current position is 5 (at 'e').
 	checkpointBeforeF := reader.Checkpoint() // pos is 5
-	rf, _ := reader.Read() // f
+	rf, _ := reader.Read()                   // f
 	assert.Equal(t, 'f', rf)
 	assert.Equal(t, 6, reader.CurrentLocation().Index)
 	err := reader.Rollback(checkpointBeforeF) // Rollback to 5
@@ -77,15 +77,14 @@ func TestRuneBufferLimit(t *testing.T) {
 	assert.Equal(t, 'f', rf_again)
 	assert.Equal(t, 6, reader.CurrentLocation().Index)
 
-
 	// Test Checkpoint and Rollback within the window
 	// Current position is 6 (at 'f')
-	checkpoint := reader.Checkpoint() 
+	checkpoint := reader.Checkpoint()
 	rg, _ := reader.Read() // g
 	assert.Equal(t, 'g', rg)
 	assert.Equal(t, 7, reader.CurrentLocation().Index)
 	assert.Equal(t, 3, reader.BufferedLength()) // Buffer should contain 3 runes (efg)
-	assert.Equal(t, "efg", reader.Slice(4, 7)) // Slice from absolute pos 4 to 7 should be "efg"
+	assert.Equal(t, "efg", reader.Slice(4, 7))  // Slice from absolute pos 4 to 7 should be "efg"
 
 	err = reader.Rollback(checkpoint) // Rollback to 6
 	assert.NoError(t, err)
@@ -126,7 +125,7 @@ func TestRuneBufferSlice(t *testing.T) {
 	assert.Equal(t, "cde", reader.Slice(1, 6)) // Expanded left and right
 	assert.Equal(t, "cde", reader.Slice(1, 5)) // Expanded left
 	assert.Equal(t, "de", reader.Slice(3, 6))  // Expanded right
-	assert.Equal(t, "c", reader.Slice(2, 3)) // Exact match
+	assert.Equal(t, "c", reader.Slice(2, 3))   // Exact match
 
 	// Test slices entirely outside buffer (should be empty)
 	assert.Equal(t, "", reader.Slice(0, 1))
