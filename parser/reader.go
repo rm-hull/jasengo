@@ -101,7 +101,7 @@ func (rb *runeBuffer) Slice(from, to int) string {
 		bufferTo = len(rb.buffer)
 	}
 
-	if bufferFrom >= bufferTo || bufferFrom >= len(rb.buffer) || bufferTo <= 0 {
+	if bufferFrom >= bufferTo {
 		return ""
 	}
 
