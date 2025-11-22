@@ -7,12 +7,19 @@ type UnboundedBuffer[T any] struct {
 
 // NewUnboundedBuffer creates a new UnboundedBuffer.
 func NewUnboundedBuffer[T any]() *UnboundedBuffer[T] {
-	return &UnboundedBuffer[T]{buffer: make([]T, 0)}
+	return &UnboundedBuffer[T]{
+		buffer: make([]T, 0),
+	}
 }
 
 // Write appends an element to the unbounded buffer.
 func (ub *UnboundedBuffer[T]) Write(r T) {
 	ub.buffer = append(ub.buffer, r)
+}
+
+// Base returns the absolute index of the element at logical index 0.
+func (ub *UnboundedBuffer[T]) Base() int {
+	return 0
 }
 
 // Read returns the element at the given logical index or ErrElementNotFound.
@@ -41,9 +48,6 @@ func (ub *UnboundedBuffer[T]) Slice(from, to int) []T {
 
 // Length returns the number of elements stored.
 func (ub *UnboundedBuffer[T]) Length() int { return len(ub.buffer) }
-
-// IsFull for an unbounded buffer always returns false.
-func (ub *UnboundedBuffer[T]) IsFull() bool { return false }
 
 // Compile-time check that UnboundedBuffer implements Buffer.
 var _ Buffer[any] = (*UnboundedBuffer[any])(nil)

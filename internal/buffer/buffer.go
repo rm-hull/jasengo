@@ -15,6 +15,7 @@ type Buffer[T any] interface {
 	// Length returns the number of valid elements currently stored.
 	Length() int
 
-	// IsFull reports whether the buffer is filled to capacity.
-	IsFull() bool
+	// Base returns the absolute index of the element at logical index 0
+	// (the logical start / tail of the current buffer window).
+	Base() int
 }

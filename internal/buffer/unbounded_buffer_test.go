@@ -11,7 +11,6 @@ func TestUnboundedBuffer(t *testing.T) {
 		b := NewUnboundedBuffer[int]()
 
 		assert.Equal(t, 0, b.Length())
-		assert.False(t, b.IsFull())
 
 		b.Write(10)
 		b.Write(20)

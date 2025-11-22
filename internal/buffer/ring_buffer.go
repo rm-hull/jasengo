@@ -9,6 +9,7 @@ type RingBuffer[T any] struct {
 	head     int // Next write position
 	tail     int // Oldest valid element position
 	size     int // Number of valid elements in buffer
+	base     int // Absolute index of element at tail (logical start)
 }
 
 // newRingBuffer creates a new RingBuffer with the given capacity.
@@ -22,6 +23,7 @@ func NewRingBuffer[T any](capacity int) *RingBuffer[T] {
 		head:     0,
 		tail:     0,
 		size:     0,
+		base:     0,
 	}
 }
 
@@ -33,6 +35,8 @@ func (rb *RingBuffer[T]) Write(r T) {
 	} else {
 		// Buffer is full, advance tail to overwrite oldest element
 		rb.tail = (rb.tail + 1) % rb.capacity
+		// Since we've evicted the oldest element, the absolute base advances by 1
+		rb.base++
 	}
 	rb.buffer[rb.head] = r
 	rb.head = (rb.head + 1) % rb.capacity
@@ -84,9 +88,9 @@ func (rb *RingBuffer[T]) Length() int {
 	return rb.size
 }
 
-// IsFull reports whether the buffer is filled to capacity.
-func (rb *RingBuffer[T]) IsFull() bool {
-	return rb.size == rb.capacity
+// Base returns the absolute index of the element currently at logical index 0.
+func (rb *RingBuffer[T]) Base() int {
+	return rb.base
 }
 
 // Compile-time check that RingBuffer implements the Buffer interface for any element type.

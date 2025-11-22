@@ -11,7 +11,6 @@ func TestRingBuffer(t *testing.T) {
 		rb := NewRingBuffer[int](5)
 
 		assert.Equal(t, 0, rb.Length())
-		assert.False(t, rb.IsFull())
 
 		rb.Write(1)
 		rb.Write(2)
@@ -38,12 +37,14 @@ func TestRingBuffer(t *testing.T) {
 		rb.Write(10) // buffer: [10]
 		rb.Write(20) // [10,20]
 		rb.Write(30) // [10,20,30] full
-		assert.True(t, rb.IsFull())
+		// buffer is full but no overwrites yet, base should be 0
+		assert.Equal(t, 0, rb.Base())
 		assert.Equal(t, 3, rb.Length())
 
 		// Overwrite oldest (10)
 		rb.Write(40) // should now contain [20,30,40]
-		assert.True(t, rb.IsFull())
+		// an overwrite advanced the absolute base by 1
+		assert.Equal(t, 1, rb.Base())
 		assert.Equal(t, 3, rb.Length())
 
 		got, err := rb.Read(0)
