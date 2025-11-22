@@ -114,7 +114,7 @@ func Attempt[T any](p Parser[T]) Parser[T] {
 				}
 			}
 			pe := *r.Error
-			pe.Loc = st.Input.CurrentLocation()
+			pe.Loc = st.Location()
 			pe.Fatal = false
 			return Result[T]{
 				Error:    &pe,
