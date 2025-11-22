@@ -3,6 +3,7 @@ package parser
 import (
 	"bufio"
 	"io"
+	"fmt"
 )
 
 // Reader defines an interface for reading runes from an input stream.
@@ -21,7 +22,7 @@ type Reader interface {
 	// Checkpoint returns an opaque checkpoint object representing the current reader state.
 	Checkpoint() int
 	// Rollback restores the reader to the state represented by the checkpoint.
-	Rollback(checkpoint int)
+	Rollback(checkpoint int) error
 }
 
 // runeBuffer implements the Reader interface, using a bufio.Reader and a
@@ -117,9 +118,13 @@ func (rb *runeBuffer) Checkpoint() int {
 }
 
 // Rollback restores the reader to the state represented by the checkpoint.
-func (rb *runeBuffer) Rollback(checkpoint int) {
+func (rb *runeBuffer) Rollback(checkpoint int) error {
 	if checkpoint < rb.bufferOffset {
-		panic("cannot rollback to a position outside the current buffer window")
+		return &ParseError{
+			Message: fmt.Sprintf("cannot rollback to position %d: outside current buffer window", checkpoint),
+			Loc:     Location{Index: checkpoint, Line: 0, Col: 0},
+		}
 	}
 	rb.pos = checkpoint
+	return nil
 }
