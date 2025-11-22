@@ -179,7 +179,7 @@ func Choice[T any](ps ...Parser[T]) Parser[T] {
 		}
 		return Result[T]{
 			Error:    best,
-			State:    st, // State also needs to be rolled back
+			State:    st,
 			Consumed: consumed,
 		}
 	}

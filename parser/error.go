@@ -26,5 +26,6 @@ func (e *ParseError) ToFatal() *ParseError {
 		Message: e.Message,
 		Loc:     e.Loc,
 		Fatal:   true,
+		Cause:   e.Cause,
 	}
 }
