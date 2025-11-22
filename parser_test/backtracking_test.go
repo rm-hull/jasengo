@@ -10,7 +10,7 @@ import (
 
 // runFull returns the raw Result from a parser applied to the given input.
 func runFull[T any](p parser.Parser[T], input string) parser.Result[T] {
-	return p(parser.NewState(parser.NewReader(strings.NewReader(input))))
+	return p(parser.NewState(parser.NewReader(strings.NewReader(input), -1)))
 }
 
 func TestAttemptAllowsBacktracking2(t *testing.T) {
