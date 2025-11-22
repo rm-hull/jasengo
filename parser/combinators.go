@@ -246,7 +246,7 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 			// If inner parser succeeded but consumed no input
 			// Compare the location *after* parsing with the location *before* parsing.
 			if r.State.Location().Index == checkpoint.Index { // Here, checkpoint.Index is cur.Location().Index before p(cur)
-				return failT[[]T]("Many: zero-width parser", cur, true, consumed)
+				return failT[[]T]("Many: zero-width parser", cur, true, consumed, nil)
 			}
 
 			consumed = consumed || r.Consumed
@@ -266,7 +266,7 @@ func Many1[T any](p Parser[T]) Parser[[]T] {
 			return r
 		}
 		if len(r.Value) == 0 {
-			return failT[[]T]("expected 1+", st, false, false)
+			return failT[[]T]("expected 1+", st, false, false, nil)
 		}
 		return r
 	}

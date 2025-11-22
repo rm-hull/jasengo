@@ -15,17 +15,17 @@ func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
 
 		r, err := st.Input.Read()
 		if err == io.EOF {
-			return failT[rune]("unexpected EOF ("+desc+")", st, false, false)
+			return failT[rune]("unexpected EOF ("+desc+")", st, false, false, nil)
 		}
 		if err != nil {
-			return failT[rune]("error reading input: "+err.Error(), st, false, false)
+			return failT[rune]("error reading input", st, false, false, err)
 		}
 
 		if !pred(r) {
 			if err := st.Input.Rollback(checkpoint); err != nil {
-				return failT[rune]("rollback error in Satisfy: " + err.Error(), st, false, false)
+				return failT[rune]("rollback error in Satisfy", st, false, false, err)
 			}
-			return failT[rune]("expected "+desc, st, false, false)
+			return failT[rune]("expected "+desc, st, false, false, nil)
 		}
 		// Predicate succeeded, rune is consumed.
 		return success(r, st, true)
@@ -99,21 +99,21 @@ func StringP(s string) Parser[string] {
 			actualRune, err := st.Input.Read()
 			if err == io.EOF {
 				if err := st.Input.Rollback(checkpoint); err != nil {
-					return failT[string]("rollback error in StringP (EOF): " + err.Error(), st, false, false)
+					return failT[string]("rollback error in StringP (EOF)", st, false, false, err)
 				}
-				return failT[string]("expected "+strconv.Quote(s)+", got EOF", st, false, false)
+				return failT[string]("expected "+strconv.Quote(s)+", got EOF", st, false, false, nil)
 			}
 			if err != nil {
 				if err := st.Input.Rollback(checkpoint); err != nil {
-					return failT[string]("rollback error in StringP (read error): " + err.Error(), st, false, false)
+					return failT[string]("rollback error in StringP (read error)", st, false, false, err)
 				}
-				return failT[string]("error reading input: "+err.Error(), st, false, false)
+				return failT[string]("error reading input", st, false, false, err)
 			}
 			if actualRune != expectedRune {
 				if err := st.Input.Rollback(checkpoint); err != nil {
-					return failT[string]("rollback error in StringP (rune mismatch): " + err.Error(), st, false, false)
+					return failT[string]("rollback error in StringP (rune mismatch)", st, false, false, err)
 				}
-				return failT[string]("expected "+strconv.Quote(s), st, false, false)
+				return failT[string]("expected "+strconv.Quote(s), st, false, false, nil)
 			}
 			// If successful, st.Input is advanced.
 		}
@@ -131,7 +131,7 @@ func EOF() Parser[struct{}] {
 		_, err := st.Input.Read()
 		if err == io.EOF {
 			if err := st.Input.Rollback(checkpoint); err != nil { // It's EOF, but we consumed 0, so rollback to original state
-				return failT[struct{}]("rollback error in EOF (EOF): " + err.Error(), st, false, false)
+				return failT[struct{}]("rollback error in EOF (EOF)", st, false, false, err)
 			}
 			return success(struct{}{}, st, false)
 		}
@@ -139,9 +139,9 @@ func EOF() Parser[struct{}] {
 		// If we reach here, it's not EOF, so we just tried to read a character.
 		// Rollback to original state and fail.
 		if err := st.Input.Rollback(checkpoint); err != nil {
-			return failT[struct{}]("rollback error in EOF (not EOF): " + err.Error(), st, false, false)
+			return failT[struct{}]("rollback error in EOF (not EOF)", st, false, false, err)
 		}
-		return failT[struct{}]("expected EOF", st, false, false)
+		return failT[struct{}]("expected EOF", st, false, false, nil)
 	}
 }
 
@@ -149,6 +149,6 @@ func EOF() Parser[struct{}] {
 // It does not consume any input.
 func Fail[T any](msg string) Parser[T] {
 	return func(st *State) Result[T] {
-		return failT[T](msg, st, false, false)
+		return failT[T](msg, st, false, false, nil)
 	}
 }
