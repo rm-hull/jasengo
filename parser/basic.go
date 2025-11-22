@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"io"
 	"strconv"
 	"unicode"
@@ -12,6 +11,8 @@ import (
 // The `desc` parameter is used for error reporting.
 func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
 	return func(st *State) Result[rune] {
+		checkpoint := st.Input.Checkpoint() // Capture state before reading
+		
 		r, err := st.Input.Read()
 		if err == io.EOF {
 			return failT[rune]("unexpected EOF ("+desc+")", st, false, false)
@@ -21,18 +22,18 @@ func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
 		}
 
 		if !pred(r) {
-			st.Input.Unread() // If predicate fails, unread to allow backtracking
+			st.Input.Rollback(checkpoint) // Rollback to before reading
 			return failT[rune]("expected "+desc, st, false, false)
 		}
-		// Predicate succeeded, rune is consumed. Create new state with updated location.
-		return success(r, st.advanceRune(r), true)
+		// Predicate succeeded, rune is consumed.
+		return success(r, st, true)
 	}
 }
 
 // Char returns a parser that succeeds if the next rune in the input
 // is equal to the given character `c`. It consumes the rune if successful.
 func Char(c rune) Parser[rune] {
-	return Satisfy(func(r rune) bool { return r == c }, fmt.Sprintf("%q", c))
+	return Satisfy(func(r rune) bool { return r == c }, strconv.QuoteRune(c))
 }
 
 // OneOf returns a parser that succeeds if the next rune in the input
@@ -90,39 +91,26 @@ func Return[T any](v T) Parser[T] {
 // given string `s`. It consumes the matched string if successful.
 func StringP(s string) Parser[string] {
 	return func(st *State) Result[string] {
-		// Use a local slice to keep track of runes read for unreading if needed
-		readRunes := make([]rune, 0, len(s))
-
-		nextState := st
+		checkpoint := st.Input.Checkpoint() // Capture state before StringP
+		
 		for _, expectedRune := range s {
-			actualRune, err := nextState.Input.Read()
+			actualRune, err := st.Input.Read() // Operate directly on st.Input
 			if err == io.EOF {
-				// Failed to read expected string, rewind and fail
-				for i := len(readRunes) - 1; i >= 0; i-- {
-					nextState.Input.Unread()
-				}
+				st.Input.Rollback(checkpoint) // Rollback st.Input
 				return failT[string]("expected "+strconv.Quote(s)+", got EOF", st, false, false)
 			}
 			if err != nil {
-				// Some other error, rewind and fail
-				for i := len(readRunes) - 1; i >= 0; i-- {
-					nextState.Input.Unread()
-				}
+				st.Input.Rollback(checkpoint) // Rollback st.Input
 				return failT[string]("error reading input: "+err.Error(), st, false, false)
 			}
 			if actualRune != expectedRune {
-				// Mismatch, rewind and fail
-				for i := len(readRunes) - 1; i >= 0; i-- {
-					nextState.Input.Unread()
-				}
-				nextState.Input.Unread() // Unread the current mismatched rune
+				st.Input.Rollback(checkpoint) // Rollback st.Input
 				return failT[string]("expected "+strconv.Quote(s), st, false, false)
 			}
-			readRunes = append(readRunes, actualRune) // Keep track of successfully read runes
-			nextState = nextState.advanceRune(actualRune)
+			// If successful, st.Input is advanced.
 		}
 		consumed := len(s) > 0
-		return success(s, nextState, consumed)
+		return success(s, st, consumed) // Pass the advanced st
 	}
 }
 
@@ -130,13 +118,17 @@ func StringP(s string) Parser[string] {
 // has been reached. It does not consume any input.
 func EOF() Parser[struct{}] {
 	return func(st *State) Result[struct{}] {
-		_, err := st.Input.Read() // Use '_' for the rune
+		checkpoint := st.Input.Checkpoint() // Capture state before reading
+		
+		_, err := st.Input.Read() // Try to read one rune
 		if err == io.EOF {
+			st.Input.Rollback(checkpoint) // It's EOF, but we consumed 0, so rollback to original state
 			return success(struct{}{}, st, false)
 		}
-		if err == nil {
-			st.Input.Unread() // Not EOF, so unread the rune
-		}
+		
+		// If we reach here, it's not EOF, so we just tried to read a character.
+		// Rollback to original state and fail.
+		st.Input.Rollback(checkpoint)
 		return failT[struct{}]("expected EOF", st, false, false)
 	}
 }

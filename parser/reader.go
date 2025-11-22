@@ -3,7 +3,6 @@ package parser
 import (
 	"bufio"
 	"io"
-	"fmt"
 )
 
 // Reader defines an interface for reading runes from an input stream.
@@ -20,19 +19,22 @@ type Reader interface {
 	// BufferedLength returns the total number of runes buffered so far.
 	BufferedLength() int
 	// Checkpoint returns an opaque checkpoint object representing the current reader state.
-	Checkpoint() int
+	Checkpoint() Location
 	// Rollback restores the reader to the state represented by the checkpoint.
-	Rollback(checkpoint int) error
+	Rollback(checkpoint Location) error
+	// CurrentLocation returns the current reader's location.
+	CurrentLocation() Location
 }
 
 // runeBuffer implements the Reader interface, using a bufio.Reader and a
 // slice of runes to buffer the input.
 type runeBuffer struct {
-	reader *bufio.Reader
-	buffer []rune
-	pos    int
-	limit  int
-	bufferOffset int
+	reader       *bufio.Reader
+	buffer       []rune
+	pos          int
+	limit        int
+	bufferOffset int // Re-add this
+	loc          Location
 }
 
 // NewReader creates a new Reader from an io.Reader.
@@ -41,12 +43,18 @@ func NewReader(r io.Reader, limit int) Reader {
 		limit = 0
 	}
 	return &runeBuffer{
-		reader: bufio.NewReader(r),
-		buffer: make([]rune, 0),
-		pos:    0,
-		limit:  limit,
+		reader:       bufio.NewReader(r),
+		buffer:       make([]rune, 0),
+		pos:          0,
+		limit:        limit,
 		bufferOffset: 0,
+		loc:          Location{Index: 0, Line: 1, Col: 1}, // Initialize location
 	}
+}
+
+// CurrentLocation returns the current reader's location.
+func (rb *runeBuffer) CurrentLocation() Location {
+	return rb.loc
 }
 
 // Read reads the next rune from the input stream. If the reader's position is
@@ -56,6 +64,14 @@ func NewReader(r io.Reader, limit int) Reader {
 func (rb *runeBuffer) Read() (rune, error) {
 	if rb.pos < rb.bufferOffset+len(rb.buffer) {
 		r := rb.buffer[rb.pos-rb.bufferOffset]
+		// Update location BEFORE incrementing pos
+		if r == '\n' {
+			rb.loc.Line++
+			rb.loc.Col = 1
+		} else {
+			rb.loc.Col++
+		}
+		rb.loc.Index++ // Index will always increment with pos
 		rb.pos++
 		return r, nil
 	}
@@ -70,15 +86,29 @@ func (rb *runeBuffer) Read() (rune, error) {
 		rb.bufferOffset++
 	}
 	rb.buffer = append(rb.buffer, r)
+	
+	// Update location BEFORE incrementing pos
+	if r == '\n' {
+		rb.loc.Line++
+		rb.loc.Col = 1
+	} else {
+		rb.loc.Col++
+	}
+	rb.loc.Index++ // Index will always increment with pos
 	rb.pos++
 	return r, nil
 }
 
 // Unread moves the reader's position back by one rune, as long as it's not at
 // the beginning of the current buffer window.
+// NOTE: Unread does not correctly rollback Line/Col. Use Checkpoint/Rollback for accurate position restoration.
 func (rb *runeBuffer) Unread() {
 	if rb.pos > rb.bufferOffset {
 		rb.pos--
+		// Cannot reliably rollback Line/Col with just unread without knowing the previous rune.
+		// This is where Checkpoint/Rollback comes in for full location restoration.
+		// However, we must ensure loc.Index stays consistent with rb.pos.
+		rb.loc.Index--
 	}
 }
 
@@ -113,18 +143,19 @@ func (rb *runeBuffer) BufferedLength() int {
 }
 
 // Checkpoint returns an opaque checkpoint object representing the current reader state.
-func (rb *runeBuffer) Checkpoint() int {
-	return rb.pos
+func (rb *runeBuffer) Checkpoint() Location {
+	return rb.loc // Return the entire location
 }
 
 // Rollback restores the reader to the state represented by the checkpoint.
-func (rb *runeBuffer) Rollback(checkpoint int) error {
-	if checkpoint < rb.bufferOffset {
+func (rb *runeBuffer) Rollback(checkpoint Location) error {
+	if checkpoint.Index < rb.bufferOffset {
 		return &ParseError{
-			Message: fmt.Sprintf("cannot rollback to position %d: outside current buffer window", checkpoint),
-			Loc:     Location{Index: checkpoint, Line: 0, Col: 0},
+			Message: fmt.Sprintf("cannot rollback to position %d: outside current buffer window", checkpoint.Index),
+			Loc:     checkpoint,
 		}
 	}
-	rb.pos = checkpoint
+	rb.pos = checkpoint.Index
+	rb.loc = checkpoint // Restore the entire location
 	return nil
 }
