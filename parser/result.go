@@ -12,12 +12,24 @@ func (res *Result[T]) IsSuccess() bool {
 }
 
 func success[T any](v T, st *State, consumed bool) Result[T] {
-	return Result[T]{Value: v, State: st, Consumed: consumed}
+	return Result[T]{
+		Value:    v,
+		State:    st,
+		Consumed: consumed,
+	}
 }
 
-func failT[T any](msg string, st *State, fatal bool, consumed bool) Result[T] {
-	err := ParseError{Message: msg, Loc: st.Input.CurrentLocation(), Fatal: fatal}
-	return Result[T]{Error: &err, State: st, Consumed: consumed}
+func failT[T any](msg string, st *State, fatal bool, consumed bool, cause error) Result[T] {
+	return Result[T]{
+		State:    st,
+		Consumed: consumed,
+		Error: &ParseError{
+			Message: msg,
+			Loc:     st.Input.CurrentLocation(),
+			Fatal:   fatal,
+			Cause:   cause,
+		},
+	}
 }
 
 func pickBestError(a, b *ParseError) *ParseError {
