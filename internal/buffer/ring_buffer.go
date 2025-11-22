@@ -13,6 +13,9 @@ type RingBuffer[T any] struct {
 
 // newRingBuffer creates a new RingBuffer with the given capacity.
 func NewRingBuffer[T any](capacity int) *RingBuffer[T] {
+	if capacity <= 0 {
+		panic("ring buffer capacity must be positive")
+	}
 	return &RingBuffer[T]{
 		buffer:   make([]T, capacity),
 		capacity: capacity,
@@ -20,6 +23,7 @@ func NewRingBuffer[T any](capacity int) *RingBuffer[T] {
 		tail:     0,
 		size:     0,
 	}
+}
 }
 
 // Write adds an element to the ring buffer. If the buffer is full, it overwrites
