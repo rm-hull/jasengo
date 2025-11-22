@@ -59,10 +59,19 @@ func (rb *RingBuffer[T]) Slice(from, to int) []T {
 		return []T{}
 	}
 
-	var result []T
-	for i := from; i < to; i++ {
-		physicalIndex := (rb.tail + i) % rb.capacity
-		result = append(result, rb.buffer[physicalIndex])
+	count := to - from
+	result := make([]T, count)
+	physicalStart := (rb.tail + from) % rb.capacity
+
+	// Check if the slice wraps around the buffer
+	if physicalStart+count <= rb.capacity {
+		// Single copy
+		copy(result, rb.buffer[physicalStart:physicalStart+count])
+	} else {
+		// Two copies needed for wrap-around
+		firstPartLen := rb.capacity - physicalStart
+		copy(result, rb.buffer[physicalStart:])
+		copy(result[firstPartLen:], rb.buffer[0:count-firstPartLen])
 	}
 	return result
 }
