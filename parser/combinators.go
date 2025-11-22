@@ -99,13 +99,13 @@ func Bind[A any, B any](p Parser[A], f func(A) Parser[B]) Parser[B] {
 // from being tried.
 func Attempt[T any](p Parser[T]) Parser[T] {
 	return func(st *State) Result[T] {
+		checkpoint := st.Input.Checkpoint() // Checkpoint reader state
 		r := p(st)
 		if r.Error != nil {
 			if r.Error.Fatal {
-				// If the error is fatal, propagate it immediately.
 				return r
 			}
-			// For non-fatal errors, perform the rollback.
+			st.Input.Rollback(checkpoint) // Rollback reader state on non-fatal error
 			pe := *r.Error
 			pe.Loc = st.Loc
 			pe.Fatal = false
@@ -149,19 +149,24 @@ func Choice[T any](ps ...Parser[T]) Parser[T] {
 		var best *ParseError
 		var consumed bool
 		for _, p := range ps {
+			checkpoint := st.Input.Checkpoint() // Checkpoint reader state before trying parser
 			r := p(st)
 			if r.Error == nil {
 				return r
 			}
 			consumed = consumed || r.Consumed
 			if r.Error.Fatal || r.Consumed {
-				return r // no backtracking
+				// If fatal or consumed, no backtracking for this branch, propagate.
+				// No rollback needed, as the reader state should remain advanced.
+				return r
 			}
+			// If non-fatal and did not consume, rollback reader state to before this parser was applied.
+			st.Input.Rollback(checkpoint)
 			best = pickBestError(best, r.Error)
 		}
 		return Result[T]{
 			Error:    best,
-			State:    st,
+			State:    st, // State also needs to be rolled back
 			Consumed: consumed,
 		}
 	}

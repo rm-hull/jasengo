@@ -16,6 +16,12 @@ type Reader interface {
 	// Slice returns a string slice of the runes that have been read so far
 	// between the 'from' and 'to' positions.
 	Slice(from, to int) string
+	// BufferedLength returns the total number of runes buffered so far.
+	BufferedLength() int
+	// Checkpoint returns an opaque checkpoint object representing the current reader state.
+	Checkpoint() int
+	// Rollback restores the reader to the state represented by the checkpoint.
+	Rollback(checkpoint int)
 }
 
 // runeBuffer implements the Reader interface, using a bufio.Reader and a
@@ -76,4 +82,19 @@ func (rb *runeBuffer) Slice(from, to int) string {
 		return ""
 	}
 	return string(rb.buffer[from:to])
+}
+
+// BufferedLength returns the total number of runes buffered so far.
+func (rb *runeBuffer) BufferedLength() int {
+	return len(rb.buffer)
+}
+
+// Checkpoint returns an opaque checkpoint object representing the current reader state.
+func (rb *runeBuffer) Checkpoint() int {
+	return rb.pos
+}
+
+// Rollback restores the reader to the state represented by the checkpoint.
+func (rb *runeBuffer) Rollback(checkpoint int) {
+	rb.pos = checkpoint
 }

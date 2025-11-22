@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"io"
 	"strconv"
 	"unicode/utf8"
 )
@@ -16,19 +17,18 @@ func (l *Location) String() string {
 }
 
 type State struct {
-	Input *string
+	Input Reader
 	Loc   Location
 }
 
-func NewState(s string) *State {
+func NewState(r Reader) *State {
 	return &State{
-		Input: &s,
-		Loc:   Location{Index: 0, Line: 1, Col: 1},
+		Input: r,
+		Loc:   Location{Index: r.Pos(), Line: 1, Col: 1},
 	}
 }
 
-func (st *State) advanceRune(r rune, size int) *State {
-	index := st.Loc.Index + size
+func (st *State) advanceRune(r rune) *State {
 	line := st.Loc.Line
 	col := st.Loc.Col
 
@@ -41,20 +41,22 @@ func (st *State) advanceRune(r rune, size int) *State {
 
 	return &State{
 		Input: st.Input,
-		Loc:   Location{Index: index, Line: line, Col: col},
+		Loc:   Location{Index: st.Input.Pos(), Line: line, Col: col},
 	}
 }
 
 func (st *State) currentRune() (rune, int, bool) {
-	input := *st.Input
-	if st.Loc.Index >= len(input) {
+	r, err := st.Input.Read()
+	if err == io.EOF {
 		return 0, 0, false
 	}
-	r, size := utf8.DecodeRuneInString(input[st.Loc.Index:])
-	return r, size, true
+	if err != nil {
+		return 0, 0, false
+	}
+	st.Input.Unread()
+	return r, utf8.RuneLen(r), true
 }
 
 func (st *State) Remaining() string {
-	input := *st.Input
-	return input[st.Loc.Index:]
+	return st.Input.Slice(st.Input.Pos(), st.Input.BufferedLength())
 }
