@@ -10,8 +10,6 @@ import (
 type Reader interface {
 	// Read reads the next rune from the input stream.
 	Read() (rune, error)
-	// Pos returns the current reader position.
-	Pos() int
 	// Slice returns a string slice of the runes that have been read so far
 	// between the 'from' and 'to' positions.
 	Slice(from, to int) string
@@ -30,9 +28,8 @@ type Reader interface {
 type runeBuffer struct {
 	reader       *bufio.Reader
 	buffer       []rune
-	pos          int
 	limit        int
-	bufferOffset int // Re-add this
+	bufferOffset int
 	loc          Location
 }
 
@@ -44,7 +41,6 @@ func NewReader(r io.Reader, limit int) Reader {
 	return &runeBuffer{
 		reader:       bufio.NewReader(r),
 		buffer:       make([]rune, 0),
-		pos:          0,
 		limit:        limit,
 		bufferOffset: 0,
 		loc:          Location{Index: 0, Line: 1, Col: 1}, // Initialize location
@@ -61,17 +57,9 @@ func (rb *runeBuffer) CurrentLocation() Location {
 // a new rune from the underlying reader, adds it to the buffer, and then
 // returns it.
 func (rb *runeBuffer) Read() (rune, error) {
-	if rb.pos < rb.bufferOffset+len(rb.buffer) {
-		r := rb.buffer[rb.pos-rb.bufferOffset]
-		// Update location BEFORE incrementing pos
-		if r == '\n' {
-			rb.loc.Line++
-			rb.loc.Col = 1
-		} else {
-			rb.loc.Col++
-		}
-		rb.loc.Index++ // Index will always increment with pos
-		rb.pos++
+	if rb.loc.Index < rb.bufferOffset+len(rb.buffer) {
+		r := rb.buffer[rb.loc.Index-rb.bufferOffset]
+		rb.advanceLocation(r)
 		return r, nil
 	}
 
@@ -85,24 +73,19 @@ func (rb *runeBuffer) Read() (rune, error) {
 		rb.bufferOffset++
 	}
 	rb.buffer = append(rb.buffer, r)
-	
-	// Update location BEFORE incrementing pos
+	rb.advanceLocation(r)
+	return r, nil
+}
+
+func (rb *runeBuffer) advanceLocation(r rune) {
+	// Update location BEFORE incrementing Index
 	if r == '\n' {
 		rb.loc.Line++
 		rb.loc.Col = 1
 	} else {
 		rb.loc.Col++
 	}
-	rb.loc.Index++ // Index will always increment with pos
-	rb.pos++
-	return r, nil
-}
-
-
-
-// Pos returns the current reader position.
-func (rb *runeBuffer) Pos() int {
-	return rb.pos
+	rb.loc.Index++
 }
 
 // Slice returns a string slice of the runes that have been read so far between
@@ -143,7 +126,6 @@ func (rb *runeBuffer) Rollback(checkpoint Location) error {
 			Loc:     checkpoint,
 		}
 	}
-	rb.pos = checkpoint.Index
 	rb.loc = checkpoint // Restore the entire location
 	return nil
 }
