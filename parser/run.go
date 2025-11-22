@@ -1,7 +1,13 @@
 package parser
 
+import (
+	_ "io" // Blank import to satisfy type requirement for io.Reader
+	"strings"
+)
+
 func Run[T any](p Parser[T], input string) (T, bool, *ParseError) {
-	st := NewState(input)
+	reader := NewReader(strings.NewReader(input))
+	st := NewState(reader)
 	r := p(st)
 	if r.Error != nil {
 		return *new(T), r.Consumed, r.Error

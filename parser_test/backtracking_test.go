@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/rm-hull/jasengo/parser"
@@ -9,7 +10,7 @@ import (
 
 // runFull returns the raw Result from a parser applied to the given input.
 func runFull[T any](p parser.Parser[T], input string) parser.Result[T] {
-	return p(parser.NewState(input))
+	return p(parser.NewState(parser.NewReader(strings.NewReader(input))))
 }
 
 func TestAttemptAllowsBacktracking2(t *testing.T) {
