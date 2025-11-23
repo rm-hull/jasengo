@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode"
 
 	"github.com/rm-hull/jasengo/parser"
 	"github.com/stretchr/testify/assert"
@@ -53,11 +54,11 @@ var twoDigits = parser.Map(
 func timeP() parser.Parser[time.Time] {
 	return parser.Map(
 		parser.Token(
-            parser.Sequence(
+			parser.Sequence(
 				parser.ToAny(twoDigits),           // hour
 				parser.ToAny(parser.StringP(":")), // :
 				parser.ToAny(twoDigits),           // minute
-				parser.ToAny(parser.StringP(":")),  // :
+				parser.ToAny(parser.StringP(":")), // :
 				parser.ToAny(twoDigits),           // second
 			),
 		),
@@ -94,10 +95,7 @@ func dateTimeP() parser.Parser[time.Time] {
 }
 
 var wordCharacters = parser.Satisfy(func(r rune) bool {
-	return (r >= 'a' && r <= 'z') ||
-		(r >= 'A' && r <= 'Z') ||
-		(r >= '0' && r <= '9') ||
-		r == '_' || r == '-'
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '-'
 }, "word character")
 
 var wordP = parser.Map(parser.Token(parser.Many1(wordCharacters)), func(runes []rune) string {
@@ -140,7 +138,7 @@ var messageCharP = parser.Bind(parser.Not(isAttribute), func(_ any) parser.Parse
 })
 
 var messageP = parser.Map(
-	parser.Token(parser.Many1(messageCharP)),
+	parser.Many1(messageCharP),
 	func(runes []rune) string {
 		s := string(runes)
 		return strings.TrimSpace(s)
@@ -214,7 +212,7 @@ func logLineP() parser.Parser[*LogLineEntry] {
 func TestParseLogFile(t *testing.T) {
 	file, err := os.Open("./data/Linux_2k.log")
 	assert.NoError(t, err)
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	st := parser.NewState(parser.NewReader(file, 1024))
 	r := logLineP()(st)
