@@ -39,7 +39,7 @@ func divOp(x, y int) int {
 
 // integer parses one or more digits and returns the integer value.
 var integer = parser.Map(
-	parser.Token(parser.Many1(parser.Satisfy(digitPredicate, "digit"))),
+	parser.Token(parser.Many1(parser.Digit())),
 	func(runes []rune) int {
 		s := string(runes)
 		i, _ := strconv.Atoi(s) // Error can be ignored as Satisfy ensures they are digits.

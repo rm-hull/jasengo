@@ -147,8 +147,8 @@ func EOF() Parser[struct{}] {
 
 // Fail returns a parser that always fails with the given message.
 // It does not consume any input.
-func Fail[T any](msg string) Parser[T] {
+func Fail[T any](msg string, cause error) Parser[T] {
 	return func(st *State) Result[T] {
-		return failT[T](msg, st, false, false, nil)
+		return failT[T](msg, st, false, false, cause)
 	}
 }

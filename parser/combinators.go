@@ -424,3 +424,33 @@ func ChainR[A any](p Parser[A], op Parser[func(A, A) A]) Parser[A] {
 	})
 	return pChainR
 }
+
+// Not returns a parser that succeeds if `p` fails, and fails if `p` succeeds.
+// It never consumes any input.
+func Not[T any](p Parser[T]) Parser[any] {
+	return func(st *State) Result[any] {
+		checkpoint := st.Input.Checkpoint()
+		r := p(st)
+
+		if r.Error != nil && r.Error.Fatal {
+			// Cannot meaningfully negate a parser that fatally fails,
+			// as it implies a committed choice. Propagate the fatal error.
+			return Result[any]{Error: r.Error, State: r.State, Consumed: r.Consumed}
+		}
+
+		// Whether `p` succeeded or failed (non-fatally), we must rollback
+		// because `Not` is a predicate and does not consume input.
+		if err := st.Input.Rollback(checkpoint); err != nil {
+			return Result[any]{Error: err.(*ParseError).ToFatal(), State: st}
+		}
+
+		if r.Error != nil {
+			// p failed non-fatally, so Not succeeds.
+			return success[any](nil, st, false)
+		}
+
+		// p succeeded, so Not fails.
+		return failT[any]("not: parser succeeded", st, false, false, nil)
+	}
+}
+
