@@ -37,7 +37,8 @@ func TestUnboundedBuffer(t *testing.T) {
 
 		// Ensure Slice returns a copy
 		s[0] = 99
-		v, _ := b.Read(1)
+		v, ok := b.Read(1)
+		assert.True(t, ok)
 		assert.NotEqual(t, 99, v)
 
 		// Bounds: from < 0 and to > length should be clamped

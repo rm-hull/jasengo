@@ -17,11 +17,6 @@ func (ub *UnboundedBuffer[T]) Write(r T) {
 	ub.buffer = append(ub.buffer, r)
 }
 
-// Base returns the absolute index of the element at logical index 0.
-func (ub *UnboundedBuffer[T]) Base() int {
-	return 0
-}
-
 // Read returns the element at the given logical index or ErrElementNotFound.
 // Read returns the element at the given absolute index. For an unbounded buffer
 // the base is always 0 so the absolute index is the same as the logical index.
@@ -34,27 +29,28 @@ func (ub *UnboundedBuffer[T]) Read(absIndex int) (T, bool) {
 
 // Slice returns a copy of elements in the half-open range [from, to).
 func (ub *UnboundedBuffer[T]) Slice(from, to int) []T {
-	// Convert absolute indices to logical indices. For UnboundedBuffer base is 0,
-	// but keep the conversion for consistency.
-	logicalFrom := from - ub.Base()
-	logicalTo := to - ub.Base()
 
-	if logicalFrom < 0 {
-		logicalFrom = 0
+	if from < 0 {
+		from = 0
 	}
-	if logicalTo > len(ub.buffer) {
-		logicalTo = len(ub.buffer)
+	if to > len(ub.buffer) {
+		to = len(ub.buffer)
 	}
-	if logicalFrom >= logicalTo {
+	if from >= to {
 		return []T{}
 	}
-	out := make([]T, logicalTo-logicalFrom)
-	copy(out, ub.buffer[logicalFrom:logicalTo])
+	out := make([]T, to-from)
+	copy(out, ub.buffer[from:to])
 	return out
 }
 
 // Length returns the number of elements stored.
 func (ub *UnboundedBuffer[T]) Length() int { return len(ub.buffer) }
+
+// Base returns the absolute index of the element at logical index 0.
+func (ub *UnboundedBuffer[T]) Base() int {
+	return 0
+}
 
 // Compile-time check that UnboundedBuffer implements Buffer.
 var _ Buffer[any] = (*UnboundedBuffer[any])(nil)
