@@ -73,6 +73,13 @@ func TestRegexP(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.EqualError(t, err, "invalid regex pattern at line 1 col 1: error parsing regexp: missing closing ]: `[a-`")
 	})
+
+	t.Run("Successful parse with multi-byte characters", func(t *testing.T) {
+		p := parser.RegexP(`.{2}`) // Match any two characters
+		v, _, err := parser.Run(p, "你好世界")
+		assert.Nil(t, err)
+		assert.Equal(t, "你好", v)
+	})
 }
 
 func TestManyDigits(t *testing.T) {
