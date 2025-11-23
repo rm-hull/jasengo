@@ -53,6 +53,35 @@ func TestStringP(t *testing.T) {
 	})
 }
 
+func TestRegexP(t *testing.T) {
+	t.Run("Successful parse", func(t *testing.T) {
+		p := parser.RegexP(`\d{3,}`)
+		v, _, err := parser.Run(p, "12345abc")
+		assert.Nil(t, err)
+		assert.Equal(t, "12345", v)
+	})
+
+	t.Run("Failed parse", func(t *testing.T) {
+		p := parser.RegexP(`\d{3,}`)
+		_, _, err := parser.Run(p, "ab123")
+		assert.NotNil(t, err)
+	})
+
+	t.Run("Invalid regex pattern fails", func(t *testing.T) {
+		p := parser.RegexP(`[a-`) // Invalid regex pattern
+		_, _, err := parser.Run(p, "abc")
+		assert.NotNil(t, err)
+		assert.EqualError(t, err, "invalid regex pattern at line 1 col 1: error parsing regexp: missing closing ]: `[a-`")
+	})
+
+	t.Run("Successful parse with multi-byte characters", func(t *testing.T) {
+		p := parser.RegexP(`.{2}`) // Match any two characters
+		v, _, err := parser.Run(p, "你好世界")
+		assert.Nil(t, err)
+		assert.Equal(t, "你好", v)
+	})
+}
+
 func TestManyDigits(t *testing.T) {
 	p := parser.Many(parser.Digit())
 
@@ -84,11 +113,11 @@ func TestChoice(t *testing.T) {
 	t.Run("Consumed flag when first choice fails after consuming input", func(t *testing.T) {
 		// Define a parser that consumes 'a' but then fails
 		aThenFail := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[rune] {
-			return parser.Fail[rune]("expected 'x'")
+			return parser.Fail[rune]("expected 'x'", nil)
 		})
 		// Define a parser that consumes 'b' but then fails
 		bThenFail := parser.Bind(parser.Char('b'), func(_ rune) parser.Parser[rune] {
-			return parser.Fail[rune]("expected 'y'")
+			return parser.Fail[rune]("expected 'y'", nil)
 		})
 
 		// Choice between two parsers that consume input and then fail
@@ -106,11 +135,11 @@ func TestChoice(t *testing.T) {
 	t.Run("Consumed flag when second choice fails after consuming input", func(t *testing.T) {
 		// Define a parser that consumes 'a' but then fails
 		aThenFail := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[rune] {
-			return parser.Fail[rune]("expected 'x'")
+			return parser.Fail[rune]("expected 'x'", nil)
 		})
 		// Define a parser that consumes 'b' but then fails
 		bThenFail := parser.Bind(parser.Char('b'), func(_ rune) parser.Parser[rune] {
-			return parser.Fail[rune]("expected 'y'")
+			return parser.Fail[rune]("expected 'y'", nil)
 		})
 
 		// Choice between two parsers that consume input and then fail
@@ -126,11 +155,11 @@ func TestChoice(t *testing.T) {
 	t.Run("Consumed flag when neither choice consumes input", func(t *testing.T) {
 		// Define a parser that consumes 'a' but then fails
 		aThenFail := parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[rune] {
-			return parser.Fail[rune]("expected 'x'")
+			return parser.Fail[rune]("expected 'x'", nil)
 		})
 		// Define a parser that consumes 'b' but then fails
 		bThenFail := parser.Bind(parser.Char('b'), func(_ rune) parser.Parser[rune] {
-			return parser.Fail[rune]("expected 'y'")
+			return parser.Fail[rune]("expected 'y'", nil)
 		})
 
 		// Choice between two parsers that consume input and then fail
@@ -157,12 +186,11 @@ func TestChoice_ErrorScenarios(t *testing.T) {
 
 		return parser.Bind(parser.StringP(prefix), func(_ string) parser.Parser[rune] {
 			if fatal {
-				return parser.Commit(parser.Fail[rune](msg))
+				return parser.Commit(parser.Fail[rune](msg, nil))
 			}
-			return parser.Fail[rune](msg)
+			return parser.Fail[rune](msg, nil)
 		})
 	}
-
 	t.Run("Scenario 3: a is fatal, b is not fatal. Choice should return fatal error.", func(t *testing.T) {
 		// To ensure pickBestError is called, the first parser must not be fatal and not consume.
 		// So, we make the first parser non-fatal and the second fatal.
@@ -185,7 +213,12 @@ func TestChoice_ErrorScenarios(t *testing.T) {
 	t.Run("Scenario 5: Both fatal, first error at later index. Choice should return error at later index.", func(t *testing.T) {
 		// Both non-fatal initially, then one becomes fatal.
 		pBothFatalLaterIndex := parser.Choice(
-			parser.Bind(failingParserAtCol("non-fatal A", 1, false), func(_ rune) parser.Parser[rune] { return parser.Commit(parser.Fail[rune]("fatal error A")) }),
+			parser.Bind(
+				failingParserAtCol("non-fatal A", 1, false),
+				func(_ rune) parser.Parser[rune] {
+					return parser.Commit(parser.Fail[rune]("fatal error A", nil))
+				},
+			),
 			failingParserAtCol("fatal error B", 2, true),
 		)
 		_, _, err5 := parser.Run(pBothFatalLaterIndex, "zinput")
@@ -197,7 +230,12 @@ func TestChoice_ErrorScenarios(t *testing.T) {
 	t.Run("Scenario 6: Both fatal, second error at later index. Choice should return error at later index.", func(t *testing.T) {
 		pBothFatalEarlierIndex := parser.Choice(
 			failingParserAtCol("fatal error A", 1, true),
-			parser.Bind(failingParserAtCol("non-fatal B", 1, false), func(_ rune) parser.Parser[rune] { return parser.Commit(parser.Fail[rune]("fatal error B")) }),
+			parser.Bind(
+				failingParserAtCol("non-fatal B", 1, false),
+				func(_ rune) parser.Parser[rune] {
+					return parser.Commit(parser.Fail[rune]("fatal error B", nil))
+				},
+			),
 		)
 		_, _, err6 := parser.Run(pBothFatalEarlierIndex, "zinput")
 		assert.NotNil(t, err6)
@@ -225,7 +263,12 @@ func TestChoice_ErrorScenarios(t *testing.T) {
 		t.Skip("Need to come back to this test...")
 		// The best error should be the one that consumed input, or the one furthest along.
 		pConsumeFail := parser.Choice(
-			parser.Bind(parser.Char('a'), func(_ rune) parser.Parser[rune] { return parser.Fail[rune]("fail after a") }),
+			parser.Bind(
+				parser.Char('a'),
+				func(_ rune) parser.Parser[rune] {
+					return parser.Fail[rune]("fail after a", nil)
+				},
+			),
 			parser.Char('b'), // This will fail without consuming
 		)
 		_, _, err9 := parser.Run(pConsumeFail, "ax")
