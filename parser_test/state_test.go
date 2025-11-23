@@ -70,7 +70,6 @@ func TestStateWithRingBuffer(t *testing.T) {
 	// currently buffered content. This test demonstrates this behavior.
 
 	const limit = 20
-	const prefill = 5 // 25% of 20
 
 	t.Run("input smaller than buffer", func(t *testing.T) {
 		input := "hello world" // length 11, smaller than limit 20
@@ -102,7 +101,8 @@ func TestStateWithRingBuffer(t *testing.T) {
 			}
 		}
 		// After reading all, go back to the state after reading 6 characters
-		st.Input.Rollback(parser.Location{Index: 6, Line: 1, Col: 7})
+		err := st.Input.Rollback(parser.Location{Index: 6, Line: 1, Col: 7})
+		assert.NoError(t, err)
 		assert.Equal(t, "world", st.Remaining())
 	})
 

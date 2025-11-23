@@ -47,15 +47,15 @@ func NewReader(r io.Reader, limit int) Reader {
 		rr.buffer = buffer.NewRingBuffer[rune](limit)
 	} else {
 		rr.buffer = buffer.NewUnboundedBuffer[rune]()
-		prefillCount = 2 ^ 16 // Pre-fill upto 64Kb
+		prefillCount = 1 << 16 // Pre-fill upto 64Kb
 	}
 
 	for range prefillCount {
-		rune, _, err := rr.reader.ReadRune()
+		r, _, err := rr.reader.ReadRune()
 		if err != nil {
 			break // Stop pre-filling if we reach EOF or an error
 		}
-		rr.buffer.Write(rune)
+		rr.buffer.Write(r)
 	}
 
 	return rr
