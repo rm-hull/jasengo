@@ -40,8 +40,6 @@ func (rb *RingBuffer[T]) Write(r T) {
 	rb.head = (rb.head + 1) % rb.capacity
 }
 
-// Read retrieves an element from the ring buffer at the given logical index.
-// The logical index is relative to the start of the buffered content (bufferOffset).
 // Read retrieves an element from the ring buffer at the given absolute index.
 // The absolute index is converted to a logical index relative to the buffer's base.
 func (rb *RingBuffer[T]) Read(absIndex int) (T, bool) {
@@ -53,7 +51,7 @@ func (rb *RingBuffer[T]) Read(absIndex int) (T, bool) {
 	return rb.buffer[physicalIndex], true
 }
 
-// Slice returns a slice of elements from the ring buffer between the given logical indices.
+// Slice returns a slice of elements from the ring buffer between the given absolute indices.
 func (rb *RingBuffer[T]) Slice(from, to int) []T {
 	// Convert absolute indices to logical indices relative to the buffer base.
 	logicalFrom := from - rb.base

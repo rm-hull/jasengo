@@ -17,7 +17,6 @@ func (ub *UnboundedBuffer[T]) Write(r T) {
 	ub.buffer = append(ub.buffer, r)
 }
 
-// Read returns the element at the given logical index or ErrElementNotFound.
 // Read returns the element at the given absolute index. For an unbounded buffer
 // the base is always 0 so the absolute index is the same as the logical index.
 func (ub *UnboundedBuffer[T]) Read(absIndex int) (T, bool) {
