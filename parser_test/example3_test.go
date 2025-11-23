@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -12,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Jun 15 02:04:59 combo sshd(pam_unix)[20886]: authentication failure; logname= uid=0 euid=0 tty=NODEVssh ruser= rhost=220-135-151-1.hinet-ip.hinet.net  user=root
 type LogLineEntry struct {
 	Timestamp  time.Time
 	Host       string
@@ -126,15 +126,15 @@ var pidP = parser.Between(
 	parser.Symbol("]"),
 )
 
-var anyCharP = parser.Satisfy(func(r rune) bool { return true }, "any character")
-
 var isAttribute = parser.Attempt(parser.Sequence(
 	parser.ToAny(keyP),
 	parser.ToAny(parser.StringP("=")),
 ))
 
 var messageCharP = parser.Bind(parser.Not(isAttribute), func(_ any) parser.Parser[rune] {
-	return anyCharP
+	return parser.Satisfy(func(r rune) bool {
+		return r != '\n' && r != '\r'
+	}, "any character on the current line")
 })
 
 var messageP = parser.Map(
@@ -159,7 +159,10 @@ var pairP = parser.Map(
 )
 
 var attributesP = parser.Map(
-	parser.SepBy(pairP, parser.Many1(parser.OneOf(" \t\n\r"))),
+	parser.Right(
+		parser.Whitespace(),
+		parser.SepBy(pairP, parser.Many1(parser.OneOf(" \t"))),
+	),
 	func(pairs [][]string) map[string]string {
 		attrs := make(map[string]string)
 		for _, pair := range pairs {
@@ -169,53 +172,52 @@ var attributesP = parser.Map(
 	},
 )
 
-func logLineP() parser.Parser[*LogLineEntry] {
-	return parser.Map(
-		parser.Sequence(
-			parser.ToAny(dateTimeP()),              // timestamp
-			parser.ToAny(wordP),                    // hostname
-			parser.ToAny(parser.Optional(wordP)),   // process name
-			parser.ToAny(parser.Optional(moduleP)), // module
-			parser.ToAny(parser.Optional(pidP)),    // pid
-			parser.ToAny(parser.Token(parser.Symbol(":"))),
-			parser.ToAny(messageP),                     // message
-			parser.ToAny(parser.Optional(attributesP)), // attributes
-		),
-		func(v []any) *LogLineEntry {
-			logLine := LogLineEntry{
-				Timestamp: v[0].(time.Time),
-				Host:      v[1].(string),
-				Message:   v[6].(string),
-			}
+var logLineP = parser.Map(
+	parser.Sequence(
+		parser.ToAny(dateTimeP()),              // timestamp
+		parser.ToAny(wordP),                    // hostname
+		parser.ToAny(parser.Optional(wordP)),   // process name
+		parser.ToAny(parser.Optional(moduleP)), // module
+		parser.ToAny(parser.Optional(pidP)),    // pid
+		parser.ToAny(parser.Token(parser.Symbol(":"))),
+		parser.ToAny(messageP),                     // message
+		parser.ToAny(parser.Optional(attributesP)), // attributes
+		parser.ToAny(parser.Whitespace()),          // consume trailing newline
+	),
+	func(v []any) *LogLineEntry {
+		logLine := LogLineEntry{
+			Timestamp: v[0].(time.Time),
+			Host:      v[1].(string),
+			Message:   v[6].(string),
+		}
 
-			if v2, ok := v[2].(*string); ok && v2 != nil {
-				logLine.Process = *v2
-			}
+		if v2, ok := v[2].(*string); ok && v2 != nil {
+			logLine.Process = *v2
+		}
 
-			if v3, ok := v[3].(*string); ok && v3 != nil {
-				logLine.Module = v3
-			}
+		if v3, ok := v[3].(*string); ok && v3 != nil {
+			logLine.Module = v3
+		}
 
-			if v4, ok := v[4].(*int); ok && v4 != nil {
-				logLine.PID = v4
-			}
+		if v4, ok := v[4].(*int); ok && v4 != nil {
+			logLine.PID = v4
+		}
 
-			if v7, ok := v[7].(*map[string]string); ok && v7 != nil {
-				logLine.Attributes = *v7
-			}
+		if v7, ok := v[7].(*map[string]string); ok && v7 != nil {
+			logLine.Attributes = *v7
+		}
 
-			return &logLine
-		},
-	)
-}
+		return &logLine
+	},
+)
 
 func TestParseLogFile(t *testing.T) {
 	file, err := os.Open("./data/Linux_2k.log")
 	assert.NoError(t, err)
 	defer func() { _ = file.Close() }()
 
-	st := parser.NewState(parser.NewReader(file, 1024))
-	r := logLineP()(st)
+	st := parser.NewState(parser.NewReader(file, -1))
+	r := logLineP(st)
 
 	if r.Error != nil {
 		t.Fatalf("Parse error: %v", r.Error)
@@ -227,6 +229,18 @@ func TestParseLogFile(t *testing.T) {
 	assert.Equal(t, 19939, *r.Value.PID)
 	assert.Equal(t, "authentication failure;", r.Value.Message)
 	assert.NotNil(t, r.Value.Attributes)
+
+	count := 1
+	for {
+		r = logLineP(st)
+		if r.Error != nil {
+			remaining := r.State.Remaining()
+			fmt.Print(remaining)
+			break
+		}
+		count++
+	}
+
 }
 
 func TestParseAttributes(t *testing.T) {
