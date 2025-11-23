@@ -18,12 +18,12 @@ func TestUnboundedBuffer(t *testing.T) {
 
 		assert.Equal(t, 3, b.Length())
 
-		v, err := b.Read(1)
-		assert.NoError(t, err)
+		v, ok := b.Read(1)
+		assert.True(t, ok)
 		assert.Equal(t, 20, v)
 
-		_, err = b.Read(3)
-		assert.ErrorIs(t, err, ErrElementNotFound)
+		_, ok = b.Read(3)
+		assert.False(t, ok)
 	})
 
 	t.Run("SliceCopyAndBounds", func(t *testing.T) {

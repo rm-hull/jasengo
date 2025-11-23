@@ -59,14 +59,9 @@ func (rr *runeReader) CurrentLocation() Location {
 // a new rune from the underlying reader, adds it to the buffer, and then
 // returns it.
 func (rr *runeReader) Read() (rune, error) {
-	// Check if the rune is already in the buffer
-	logicalIndex := rr.loc.Index - rr.buffer.Base()
-	if logicalIndex >= 0 && logicalIndex < rr.buffer.Length() {
-		r, err := rr.buffer.Read(logicalIndex)
-		if err != nil {
-			// This should ideally not happen if logicalIndex is within bounds
-			return 0, fmt.Errorf("error reading rune from ring buffer: %w", err)
-		}
+	// If the buffer already contains the rune at the current absolute index,
+	// read it directly from the buffer.
+	if r, ok := rr.buffer.Read(rr.loc.Index); ok {
 		rr.advanceLocation(r)
 		return r, nil
 	}
@@ -78,7 +73,6 @@ func (rr *runeReader) Read() (rune, error) {
 	}
 
 	rr.buffer.Write(r)
-
 	rr.advanceLocation(r)
 	return r, nil
 }
@@ -97,10 +91,7 @@ func (rr *runeReader) advanceLocation(r rune) {
 // Slice returns a string slice of the runes that have been read so far between
 // the 'from' and 'to' positions.
 func (rr *runeReader) Slice(from, to int) string {
-	bufferFrom := from - rr.buffer.Base()
-	bufferTo := to - rr.buffer.Base()
-
-	return string(rr.buffer.Slice(bufferFrom, bufferTo))
+	return string(rr.buffer.Slice(from, to))
 }
 
 // BufferedLength returns the total number of runes buffered so far.

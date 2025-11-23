@@ -23,26 +23,33 @@ func (ub *UnboundedBuffer[T]) Base() int {
 }
 
 // Read returns the element at the given logical index or ErrElementNotFound.
-func (ub *UnboundedBuffer[T]) Read(logicalIndex int) (T, error) {
-	if logicalIndex < 0 || logicalIndex >= len(ub.buffer) {
-		return *new(T), ErrElementNotFound
+// Read returns the element at the given absolute index. For an unbounded buffer
+// the base is always 0 so the absolute index is the same as the logical index.
+func (ub *UnboundedBuffer[T]) Read(absIndex int) (T, bool) {
+	if absIndex < 0 || absIndex >= len(ub.buffer) {
+		return *new(T), false
 	}
-	return ub.buffer[logicalIndex], nil
+	return ub.buffer[absIndex], true
 }
 
 // Slice returns a copy of elements in the half-open range [from, to).
 func (ub *UnboundedBuffer[T]) Slice(from, to int) []T {
-	if from < 0 {
-		from = 0
+	// Convert absolute indices to logical indices. For UnboundedBuffer base is 0,
+	// but keep the conversion for consistency.
+	logicalFrom := from - ub.Base()
+	logicalTo := to - ub.Base()
+
+	if logicalFrom < 0 {
+		logicalFrom = 0
 	}
-	if to > len(ub.buffer) {
-		to = len(ub.buffer)
+	if logicalTo > len(ub.buffer) {
+		logicalTo = len(ub.buffer)
 	}
-	if from >= to {
+	if logicalFrom >= logicalTo {
 		return []T{}
 	}
-	out := make([]T, to-from)
-	copy(out, ub.buffer[from:to])
+	out := make([]T, logicalTo-logicalFrom)
+	copy(out, ub.buffer[logicalFrom:logicalTo])
 	return out
 }
 

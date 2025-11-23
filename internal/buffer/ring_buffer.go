@@ -1,7 +1,5 @@
 package buffer
 
-import "errors"
-
 // RingBuffer implements a fixed-size circular buffer for elements.
 type RingBuffer[T any] struct {
 	buffer   []T
@@ -42,33 +40,38 @@ func (rb *RingBuffer[T]) Write(r T) {
 	rb.head = (rb.head + 1) % rb.capacity
 }
 
-var ErrElementNotFound = errors.New("element not found in buffer")
-
 // Read retrieves an element from the ring buffer at the given logical index.
 // The logical index is relative to the start of the buffered content (bufferOffset).
-func (rb *RingBuffer[T]) Read(logicalIndex int) (T, error) {
+// Read retrieves an element from the ring buffer at the given absolute index.
+// The absolute index is converted to a logical index relative to the buffer's base.
+func (rb *RingBuffer[T]) Read(absIndex int) (T, bool) {
+	logicalIndex := absIndex - rb.base
 	if logicalIndex < 0 || logicalIndex >= rb.size {
-		return *new(T), ErrElementNotFound
+		return *new(T), false
 	}
 	physicalIndex := (rb.tail + logicalIndex) % rb.capacity
-	return rb.buffer[physicalIndex], nil
+	return rb.buffer[physicalIndex], true
 }
 
 // Slice returns a slice of elements from the ring buffer between the given logical indices.
 func (rb *RingBuffer[T]) Slice(from, to int) []T {
-	if from < 0 {
-		from = 0
+	// Convert absolute indices to logical indices relative to the buffer base.
+	logicalFrom := from - rb.base
+	logicalTo := to - rb.base
+
+	if logicalFrom < 0 {
+		logicalFrom = 0
 	}
-	if to > rb.size {
-		to = rb.size
+	if logicalTo > rb.size {
+		logicalTo = rb.size
 	}
-	if from >= to {
+	if logicalFrom >= logicalTo {
 		return []T{}
 	}
 
-	count := to - from
+	count := logicalTo - logicalFrom
 	result := make([]T, count)
-	physicalStart := (rb.tail + from) % rb.capacity
+	physicalStart := (rb.tail + logicalFrom) % rb.capacity
 
 	// Check if the slice wraps around the buffer
 	if physicalStart+count <= rb.capacity {

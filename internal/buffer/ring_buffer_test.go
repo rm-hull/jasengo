@@ -18,17 +18,17 @@ func TestRingBuffer(t *testing.T) {
 
 		assert.Equal(t, 3, rb.Length())
 
-		v, err := rb.Read(0)
-		assert.NoError(t, err)
+		v, ok := rb.Read(0)
+		assert.True(t, ok)
 		assert.Equal(t, 1, v)
 
-		v, err = rb.Read(2)
-		assert.NoError(t, err)
+		v, ok = rb.Read(2)
+		assert.True(t, ok)
 		assert.Equal(t, 3, v)
 
 		// out of range
-		_, err = rb.Read(3)
-		assert.ErrorIs(t, err, ErrElementNotFound)
+		_, ok = rb.Read(3)
+		assert.False(t, ok)
 	})
 
 	t.Run("WriteOverwrite_Wrap", func(t *testing.T) {
@@ -47,14 +47,14 @@ func TestRingBuffer(t *testing.T) {
 		assert.Equal(t, 1, rb.Base())
 		assert.Equal(t, 3, rb.Length())
 
-		got, err := rb.Read(0)
-		assert.NoError(t, err)
+		got, ok := rb.Read(rb.Base() + 0)
+		assert.True(t, ok)
 		assert.Equal(t, 20, got)
 
-		got, _ = rb.Read(1)
+		got, _ = rb.Read(rb.Base() + 1)
 		assert.Equal(t, 30, got)
 
-		got, _ = rb.Read(2)
+		got, _ = rb.Read(rb.Base() + 2)
 		assert.Equal(t, 40, got)
 	})
 
@@ -70,11 +70,11 @@ func TestRingBuffer(t *testing.T) {
 		rb.Write(6) // now [5,6,3,4] logical order [3,4,5,6]
 
 		// slice part of buffer
-		s := rb.Slice(1, 3)
+		s := rb.Slice(rb.Base()+1, rb.Base()+3)
 		assert.Equal(t, []int{4, 5}, s)
 
-		// full slice
-		s2 := rb.Slice(0, rb.Length())
+		// full slice (absolute indices)
+		s2 := rb.Slice(rb.Base()+0, rb.Base()+rb.Length())
 		assert.Equal(t, []int{3, 4, 5, 6}, s2)
 	})
 }
