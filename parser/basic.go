@@ -146,7 +146,8 @@ func RegexP(pattern string) Parser[string] {
 		checkpoint := st.Input.Checkpoint()
 
 		// Advance the input stream by the length of the match
-		for range len(match) {
+                // Advance the input stream by the length of the match
+		for range match {
 			_, err := st.Input.Read()
 			if err != nil {
 				if err := st.Input.Rollback(checkpoint); err != nil {
