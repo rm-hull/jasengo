@@ -202,8 +202,8 @@ func logLineP() parser.Parser[*LogLineEntry] {
 				logLine.PID = v4
 			}
 
-			if v7, ok := v[7].(map[string]string); ok && v7 != nil {
-				logLine.Attributes = v7
+			if v7, ok := v[7].(*map[string]string); ok && v7 != nil {
+				logLine.Attributes = *v7
 			}
 
 			return &logLine
