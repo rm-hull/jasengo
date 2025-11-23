@@ -51,11 +51,11 @@ func NewReader(r io.Reader, limit int) Reader {
 	}
 
 	for range prefillCount {
-		rune, _, err := rr.reader.ReadRune()
+		r, _, err := rr.reader.ReadRune()
 		if err != nil {
 			break // Stop pre-filling if we reach EOF or an error
 		}
-		rr.buffer.Write(rune)
+		rr.buffer.Write(r)
 	}
 
 	return rr
