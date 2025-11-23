@@ -47,7 +47,7 @@ func NewReader(r io.Reader, limit int) Reader {
 		rr.buffer = buffer.NewRingBuffer[rune](limit)
 	} else {
 		rr.buffer = buffer.NewUnboundedBuffer[rune]()
-		prefillCount = 2 ^ 16 // Pre-fill upto 64Kb
+		prefillCount = 1 << 16 // Pre-fill upto 64Kb
 	}
 
 	for range prefillCount {
