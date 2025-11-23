@@ -53,11 +53,11 @@ var twoDigits = parser.Map(
 func timeP() parser.Parser[time.Time] {
 	return parser.Map(
 		parser.Token(
-			parser.Sequence(
+            parser.Sequence(
 				parser.ToAny(twoDigits),           // hour
 				parser.ToAny(parser.StringP(":")), // :
 				parser.ToAny(twoDigits),           // minute
-				parser.ToAny(parser.Symbol(":")),  // :
+				parser.ToAny(parser.StringP(":")),  // :
 				parser.ToAny(twoDigits),           // second
 			),
 		),
