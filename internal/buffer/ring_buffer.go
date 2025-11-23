@@ -10,7 +10,7 @@ type RingBuffer[T any] struct {
 	base     int // Absolute index of element at tail (logical start)
 }
 
-// newRingBuffer creates a new RingBuffer with the given capacity.
+// NewRingBuffer creates a new RingBuffer with the given capacity.
 func NewRingBuffer[T any](capacity int) *RingBuffer[T] {
 	if capacity <= 0 {
 		panic("ring buffer capacity must be positive")
