@@ -2,6 +2,7 @@ package parser
 
 import (
 	"io"
+	"regexp"
 	"strconv"
 	"unicode"
 )
@@ -122,6 +123,43 @@ func StringP(s string) Parser[string] {
 	}
 }
 
+// RegexP returns a parser that succeeds if the input stream matches the given
+// regular expression pattern. The match must occur at the current position in
+// the input. It consumes the matched part of the stream.
+//
+// Note: This parser operates on the buffered portion of the input stream.
+// Therefore, the length of the match is limited by the size of the buffer.
+func RegexP(pattern string) Parser[string] {
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return Fail[string]("invalid regex pattern", err)
+	}
+
+	return func(st *State) Result[string] {
+		remaining := st.Remaining()
+		loc := re.FindStringIndex(remaining)
+		if loc == nil || loc[0] != 0 {
+			return failT[string]("input does not match pattern "+pattern, st, false, false, nil)
+		}
+
+		match := remaining[loc[0]:loc[1]]
+		checkpoint := st.Input.Checkpoint()
+
+		// Advance the input stream by the length of the match
+		for range len(match) {
+			_, err := st.Input.Read()
+			if err != nil {
+				if err := st.Input.Rollback(checkpoint); err != nil {
+					return failT[string]("rollback error in RegexP", st, false, false, err)
+				}
+				return failT[string]("error consuming matched input in RegexP", st, false, false, err)
+			}
+		}
+
+		return success(match, st, true)
+	}
+}
+
 // EOF returns a parser that succeeds only if the end of the input
 // has been reached. It does not consume any input.
 func EOF() Parser[struct{}] {
@@ -147,8 +185,8 @@ func EOF() Parser[struct{}] {
 
 // Fail returns a parser that always fails with the given message.
 // It does not consume any input.
-func Fail[T any](msg string) Parser[T] {
+func Fail[T any](msg string, cause error) Parser[T] {
 	return func(st *State) Result[T] {
-		return failT[T](msg, st, false, false, nil)
+		return failT[T](msg, st, false, false, cause)
 	}
 }
