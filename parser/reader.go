@@ -76,12 +76,9 @@ func (rr *runeReader) Read() (rune, error) {
 	// Replenish strategy: Maintain a lookahead buffer.
 	// If the number of available buffered runes ahead of the current location
 	// is less than the chunk size, try to read more.
-	chunkSize := 1
+	var chunkSize int
 	if rr.limit > 0 {
-		chunkSize = int(float64(rr.limit) * 0.25)
-		if chunkSize < 1 {
-			chunkSize = 1
-		}
+		chunkSize = max(int(float64(rr.limit)*0.25), 1)
 	} else {
 		// Unbounded: Read a reasonable chunk
 		chunkSize = 4096
@@ -112,11 +109,9 @@ func (rr *runeReader) Read() (rune, error) {
 
 	// If we are here, it means the rune is not in the buffer even after replenishment attempt.
 	// This usually means EOF or read error occurred during replenishment and we've consumed everything.
-	// We can try reading one more time to get the specific error if we want,
-	// or just return EOF if lookahead is 0.
-	// However, the error from ReadRune was swallowed in the loop.
-	// We should probably check if we can read from underlying reader ONE LAST TIME to get the error/rune.
-	
+	// We can try reading one more time to get the specific error if we want, or just return EOF if
+	// lookahead is 0. However, the error from ReadRune was swallowed in the loop. We should probably
+	// check if we can read from underlying reader ONE LAST TIME to get the error/rune.
 	r, _, err := rr.reader.ReadRune()
 	if err != nil {
 		return 0, err
@@ -127,7 +122,6 @@ func (rr *runeReader) Read() (rune, error) {
 }
 
 func (rr *runeReader) advanceLocation(r rune) {
-	// Update location BEFORE incrementing Index
 	if r == '\n' {
 		rr.loc.Line++
 		rr.loc.Col = 1
