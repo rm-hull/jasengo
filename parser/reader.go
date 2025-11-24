@@ -107,11 +107,9 @@ func (rr *runeReader) Read() (rune, error) {
 		return r, nil
 	}
 
-	// If we are here, it means the rune is not in the buffer even after replenishment attempt.
-	// This usually means EOF or read error occurred during replenishment and we've consumed everything.
-	// We can try reading one more time to get the specific error if we want, or just return EOF if
-	// lookahead is 0. However, the error from ReadRune was swallowed in the loop. We should probably
-	// check if we can read from underlying reader ONE LAST TIME to get the error/rune.
+	// If the buffer is exhausted after a replenishment attempt, the end of the
+	// underlying stream has likely been reached. This final read captures the
+	// definitive stream error (e.g., io.EOF).
 	r, _, err := rr.reader.ReadRune()
 	if err != nil {
 		return 0, err
