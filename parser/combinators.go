@@ -461,3 +461,7 @@ func Not[T any](p Parser[T]) Parser[any] {
 	}
 }
 
+// FollowedBy succeeds if p succeeds, without consuming input. It returns nil.
+func FollowedBy[T any](p Parser[T]) Parser[any] {
+	return Not(Not(p))
+}

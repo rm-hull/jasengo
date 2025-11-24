@@ -159,13 +159,13 @@ var attributesP = parser.Map(
 
 var isAttributeBlock = parser.Sequence(
 	parser.ToAny(attributesP),
-	parser.ToAny(parser.Not(parser.Not(parser.Sequence(
+	parser.ToAny(parser.FollowedBy(parser.Sequence(
 		parser.ToAny(parser.Many(parser.OneOf(" \t"))),
 		parser.ToAny(parser.Choice(
 			parser.ToAny(parser.EOF()),
 			parser.ToAny(parser.OneOf("\n\r")),
 		)),
-	)))),
+	))),
 )
 
 var messageCharP = parser.Bind(parser.Not(isAttributeBlock), func(_ any) parser.Parser[rune] {
