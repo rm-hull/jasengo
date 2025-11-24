@@ -49,19 +49,21 @@ func TestRuneBufferLimit(t *testing.T) {
 	assert.Equal(t, 'a', r1)
 	assert.Equal(t, 'b', r2)
 	assert.Equal(t, 'c', r3)
-	assert.Equal(t, 3, reader.BufferedLength()) // Buffer should contain 3 runes
+	assert.Equal(t, 3, reader.BufferedLength()) // Buffer should contain 3 runes (base 0 + size 3)
 	assert.Equal(t, "abc", reader.Slice(0, 3))  // Slice from absolute pos 0 to 3
 
 	// Read another rune, 'd'. 'a' should be discarded from internal buffer
+	// Replenishment reads 'd'. Buffer full -> evicts 'a'. Base becomes 1.
 	r4, _ := reader.Read() // d
 	assert.Equal(t, 'd', r4)
-	assert.Equal(t, 3, reader.BufferedLength()) // Buffer should still contain 3 runes
+	assert.Equal(t, 4, reader.BufferedLength()) // Base 1 + Size 3 = 4
 	assert.Equal(t, "bcd", reader.Slice(1, 4))  // Slice from absolute pos 1 to 4 should be "bcd"
 
 	// Read another rune, 'e'. 'b' should be discarded from internal buffer
+	// Replenishment reads 'e'. Buffer full -> evicts 'b'. Base becomes 2.
 	r5, _ := reader.Read() // e
 	assert.Equal(t, 'e', r5)
-	assert.Equal(t, 3, reader.BufferedLength()) // Buffer should still contain 3 runes
+	assert.Equal(t, 5, reader.BufferedLength()) // Base 2 + Size 3 = 5
 	assert.Equal(t, "cde", reader.Slice(2, 5))  // Slice from absolute pos 2 to 5 should be "cde"
 
 	// Test Checkpoint and Rollback for unreading behavior (simulated)
@@ -83,7 +85,7 @@ func TestRuneBufferLimit(t *testing.T) {
 	rg, _ := reader.Read() // g
 	assert.Equal(t, 'g', rg)
 	assert.Equal(t, 7, reader.CurrentLocation().Index)
-	assert.Equal(t, 3, reader.BufferedLength()) // Buffer should contain 3 runes (efg)
+	assert.Equal(t, 7, reader.BufferedLength()) // Base 4 + Size 3 = 7
 	assert.Equal(t, "efg", reader.Slice(4, 7))  // Slice from absolute pos 4 to 7 should be "efg"
 
 	err = reader.Rollback(checkpoint) // Rollback to 6

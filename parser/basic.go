@@ -16,7 +16,7 @@ func Satisfy(pred func(rune) bool, desc string) Parser[rune] {
 
 		r, err := st.Input.Read()
 		if err == io.EOF {
-			return failT[rune]("unexpected EOF ("+desc+")", st, false, false, nil)
+			return failT[rune]("unexpected EOF ("+desc+")", st, false, false, err)
 		}
 		if err != nil {
 			return failT[rune]("error reading input", st, false, false, err)
@@ -102,7 +102,7 @@ func StringP(s string) Parser[string] {
 				if err := st.Input.Rollback(checkpoint); err != nil {
 					return failT[string]("rollback error in StringP (EOF)", st, false, false, err)
 				}
-				return failT[string]("expected "+strconv.Quote(s)+", got EOF", st, false, false, nil)
+				return failT[string]("expected "+strconv.Quote(s)+", got EOF", st, false, false, err)
 			}
 			if err != nil {
 				if err := st.Input.Rollback(checkpoint); err != nil {
