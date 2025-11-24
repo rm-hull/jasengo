@@ -3,16 +3,10 @@ package parser
 import (
 	"strconv"
 	"testing"
-	"unicode"
 
 	"github.com/rm-hull/jasengo/parser"
 	"github.com/stretchr/testify/assert"
 )
-
-// digitPredicate checks if a rune is a digit.
-func digitPredicate(r rune) bool {
-	return unicode.IsDigit(r)
-}
 
 // addOp performs addition.
 func addOp(x, y int) int {
