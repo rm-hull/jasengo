@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -85,7 +84,7 @@ func dateTimeP() parser.Parser[time.Time] {
 			month := v[0].(time.Month)
 			day := v[1].(int)
 			t := v[2].(time.Time)
-            year := 2005
+			year := 2005
 			if v3, ok := v[3].(*int); ok && v3 != nil {
 				year = *v3
 			}
@@ -216,31 +215,55 @@ func TestParseLogFile(t *testing.T) {
 	assert.NoError(t, err)
 	defer func() { _ = file.Close() }()
 
-	st := parser.NewState(parser.NewReader(file, -1))
-	r := logLineP(st)
+	// st := parser.NewState(parser.NewReader(file, -1))
 
-	if r.Error != nil {
-		t.Fatalf("Parse error: %v", r.Error)
-	}
-	assert.True(t, r.Consumed)
-	assert.Equal(t, "combo", r.Value.Host)
-	assert.Equal(t, "sshd", r.Value.Process)
-	assert.Equal(t, "pam_unix", *r.Value.Module)
-	assert.Equal(t, 19939, *r.Value.PID)
-	assert.Equal(t, "authentication failure;", r.Value.Message)
-	assert.NotNil(t, r.Value.Attributes)
+	data := `Jun 14 15:16:01 combo sshd(pam_unix)[19939]: authentication failure; logname= uid=0 euid=0 tty=NODEVssh ruser= rhost=218.188.2.4
+Jun 14 15:16:02 combo sshd(pam_unix)[19937]: check pass; user unknown
+Jun 14 15:16:02 combo sshd(pam_unix)[19937]: authentication failure; logname= uid=0 euid=0 tty=NODEVssh ruser= rhost=218.188.2.4`
+	st := parser.NewState(parser.NewReader(strings.NewReader(data), -1))
 
-	count := 1
-	for {
-		r = logLineP(st)
-		if r.Error != nil {
-			remaining := r.State.Remaining()
-			fmt.Print(remaining)
-			break
-		}
-		count++
-	}
+	r1 := logLineP(st)
+	assert.Nil(t, r1.Error)
 
+	assert.True(t, r1.Consumed)
+	assert.Equal(t, "combo", r1.Value.Host)
+	assert.Equal(t, "sshd", r1.Value.Process)
+	assert.Equal(t, "pam_unix", *r1.Value.Module)
+	assert.Equal(t, 19939, *r1.Value.PID)
+	assert.Equal(t, "authentication failure;", r1.Value.Message)
+	assert.NotNil(t, r1.Value.Attributes)
+	assert.Equal(t, "0", r1.Value.Attributes["uid"])
+	assert.Equal(t, "0", r1.Value.Attributes["euid"])
+	assert.Equal(t, "NODEVssh", r1.Value.Attributes["tty"])
+	assert.Equal(t, "", r1.Value.Attributes["ruser"])
+	assert.Equal(t, "218.188.2.4", r1.Value.Attributes["rhost"])
+
+	r2 := logLineP(st)
+	assert.Nil(t, r2.Error)
+
+	assert.True(t, r2.Consumed)
+	assert.Equal(t, "combo", r2.Value.Host)
+	assert.Equal(t, "sshd", r2.Value.Process)
+	assert.Equal(t, "pam_unix", *r2.Value.Module)
+	assert.Equal(t, 19937, *r2.Value.PID)
+	assert.Equal(t, "check pass; user unknown", r2.Value.Message)
+	assert.Nil(t, r2.Value.Attributes)
+
+	r3 := logLineP(st)
+	assert.Nil(t, r3.Error)
+
+	assert.True(t, r3.Consumed)
+	assert.Equal(t, "combo", r3.Value.Host)
+	assert.Equal(t, "sshd", r3.Value.Process)
+	assert.Equal(t, "pam_unix", *r3.Value.Module)
+	assert.Equal(t, 19937, *r3.Value.PID)
+	assert.Equal(t, "authentication failure;", r3.Value.Message)
+	assert.NotNil(t, r3.Value.Attributes)
+	assert.Equal(t, "0", r3.Value.Attributes["uid"])
+	assert.Equal(t, "0", r3.Value.Attributes["euid"])
+	assert.Equal(t, "NODEVssh", r3.Value.Attributes["tty"])
+	assert.Equal(t, "", r3.Value.Attributes["ruser"])
+	assert.Equal(t, "218.188.2.4", r3.Value.Attributes["rhost"])
 }
 
 func TestParseAttributes(t *testing.T) {

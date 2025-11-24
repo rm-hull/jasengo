@@ -273,16 +273,23 @@ func Many1[T any](p Parser[T]) Parser[[]T] {
 }
 
 // Optional tries to apply parser `p`. If `p` succeeds, it returns
-// the result wrapped in a pointer. If `p` fails without consuming
-// input, it succeeds and returns `nil`. If `p` fails after consuming
-// input, or with a fatal error, Optional fails.
+// the result wrapped in a pointer. If `p` fails (non-fatally),
+// it backtracks and returns `nil`.
 func Optional[T any](p Parser[T]) Parser[*T] {
 	return func(st *State) Result[*T] {
+		checkpoint := st.Input.Checkpoint()
 		r := p(st)
 		if r.Error != nil {
 			if r.Error.Fatal {
 				return Result[*T]{
 					Error:    r.Error,
+					State:    r.State,
+					Consumed: r.Consumed,
+				}
+			}
+			if err := st.Input.Rollback(checkpoint); err != nil {
+				return Result[*T]{
+					Error:    err.(*ParseError).ToFatal(),
 					State:    r.State,
 					Consumed: r.Consumed,
 				}
