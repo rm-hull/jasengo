@@ -1,6 +1,6 @@
 # ![jäsengo](./docs/logo.webp)
 
-A parser combinator library for Go (a port of [rm-hull/jasentaa](https://github.com/rm-hull/jasentaa))
+A parser combinator library for Go (a diverging port of [rm-hull/jasentaa](https://github.com/rm-hull/jasentaa))
 
 ## Usage
 
@@ -21,8 +21,10 @@ import "github.com/rm-hull/jasengo/parser"
 ### Examples
 
 Here are a few examples demonstrating how to use `jasengo` to build parsers.
-More complex parsing examples can be found in [example1_test.go](./parser_test/example1_test.go)
-and [example2_test.go](./parser_test/example2_test.go).
+More complex parsing examples can be found in the following tests:
+* Getting Started with PyParsing: [example1_test.go](./parser_test/example1_test.go)
+* Functional Pearls: Monadic Parsing in Haskell: [example2_test.go](./parser_test/example2_test.go)
+* Syslog parser: [example3_test.go](./parser_test/example3_test.go).
 
 #### Parsing a Specific String
 
