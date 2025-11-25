@@ -15,5 +15,7 @@ func (st *State) Location() Location {
 }
 
 func (st *State) Remaining() string {
-	return st.Input.Slice(st.Input.CurrentLocation().Index, st.Input.BufferedLength())
+	from := st.Input.CurrentLocation().Index
+	to := st.Input.BufferedLength()
+	return st.Input.Slice(from, to)
 }

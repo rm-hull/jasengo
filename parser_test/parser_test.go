@@ -499,3 +499,19 @@ func TestSequence(t *testing.T) {
 		assert.Equal(t, []any{"hello", []rune{' '}, '1'}, v)
 	})
 }
+
+func TestNot(t *testing.T) {
+	t.Run("Not(p) succeeds when p fails", func(t *testing.T) {
+		p := parser.Not(parser.Char('a'))
+		_, consumed, err := parser.Run(p, "bc")
+		assert.Nil(t, err)
+		assert.False(t, consumed)
+	})
+
+	t.Run("Not(p) fails when p succeeds", func(t *testing.T) {
+		p := parser.Not(parser.Char('a'))
+		_, _, err := parser.Run(p, "abc")
+		assert.NotNil(t, err)
+		assert.Equal(t, "not: parser succeeded at line 1 col 1", err.Error())
+	})
+}

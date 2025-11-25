@@ -31,6 +31,7 @@ type runeReader struct {
 	reader *bufio.Reader
 	buffer buffer.Buffer[rune]
 	loc    Location
+	limit  int
 }
 
 // NewReader creates a new Reader from an io.Reader.
@@ -41,6 +42,7 @@ func NewReader(r io.Reader, limit int) Reader {
 	rr := &runeReader{
 		reader: bufio.NewReader(r),
 		loc:    Location{Index: 0, Line: 1, Col: 1}, // Initialize location
+		limit:  limit,
 	}
 
 	if limit > 0 {
@@ -71,6 +73,33 @@ func (rr *runeReader) CurrentLocation() Location {
 // a new rune from the underlying reader, adds it to the buffer, and then
 // returns it.
 func (rr *runeReader) Read() (rune, error) {
+	// Replenish strategy: Maintain a lookahead buffer.
+	// If the number of available buffered runes ahead of the current location
+	// is less than the chunk size, try to read more.
+	var chunkSize int
+	if rr.limit > 0 {
+		chunkSize = max(int(float64(rr.limit)*0.25), 1)
+	} else {
+		// Unbounded: Read a reasonable chunk
+		chunkSize = 4096
+	}
+
+	bufferEnd := rr.buffer.Base() + rr.buffer.Length()
+	lookahead := bufferEnd - rr.loc.Index
+
+	if lookahead < chunkSize {
+		for i := 0; i < chunkSize; i++ {
+			r, _, err := rr.reader.ReadRune()
+			if err != nil {
+				// If we encounter an error (e.g., EOF) while replenishing,
+				// we just stop replenishing. The error will be returned
+				// when the caller tries to read past the available buffer.
+				break
+			}
+			rr.buffer.Write(r)
+		}
+	}
+
 	// If the buffer already contains the rune at the current absolute index,
 	// read it directly from the buffer.
 	if r, ok := rr.buffer.Read(rr.loc.Index); ok {
@@ -78,19 +107,19 @@ func (rr *runeReader) Read() (rune, error) {
 		return r, nil
 	}
 
-	// Read new rune from underlying reader
+	// If the buffer is exhausted after a replenishment attempt, the end of the
+	// underlying stream has likely been reached. This final read captures the
+	// definitive stream error (e.g., io.EOF).
 	r, _, err := rr.reader.ReadRune()
 	if err != nil {
 		return 0, err
 	}
-
 	rr.buffer.Write(r)
 	rr.advanceLocation(r)
 	return r, nil
 }
 
 func (rr *runeReader) advanceLocation(r rune) {
-	// Update location BEFORE incrementing Index
 	if r == '\n' {
 		rr.loc.Line++
 		rr.loc.Col = 1
@@ -106,9 +135,9 @@ func (rr *runeReader) Slice(from, to int) string {
 	return string(rr.buffer.Slice(from, to))
 }
 
-// BufferedLength returns the total number of runes buffered so far.
+// BufferedLength returns the absolute index of the end of the buffer.
 func (rr *runeReader) BufferedLength() int {
-	return rr.buffer.Length()
+	return rr.buffer.Base() + rr.buffer.Length()
 }
 
 // Checkpoint returns an opaque checkpoint object representing the current reader state.
