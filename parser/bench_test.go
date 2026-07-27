@@ -10,7 +10,6 @@ import (
 // buffer management and rune reading.
 func BenchmarkReaderRead(b *testing.B) {
 	input := strings.Repeat("hello world\n", 1000)
-	b.ResetTimer()
 	for b.Loop() {
 		b.StopTimer()
 		st := NewState(NewReader(strings.NewReader(input), -1))
@@ -27,7 +26,6 @@ func BenchmarkReaderRead(b *testing.B) {
 // BenchmarkReaderReadWithLimit benchmarks reading with a ring buffer (limited size).
 func BenchmarkReaderReadWithLimit(b *testing.B) {
 	input := strings.Repeat("hello world\n", 1000)
-	b.ResetTimer()
 	for b.Loop() {
 		b.StopTimer()
 		st := NewState(NewReader(strings.NewReader(input), 4096))
@@ -45,7 +43,6 @@ func BenchmarkReaderReadWithLimit(b *testing.B) {
 func BenchmarkReaderCheckpointRollback(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	st := NewState(NewReader(strings.NewReader(input), -1))
-	b.ResetTimer()
 	for b.Loop() {
 		checkpoint := st.Input.Checkpoint()
 		for j := 0; j < 10; j++ {
@@ -63,7 +60,6 @@ func BenchmarkReaderSlice(b *testing.B) {
 	for i := 0; i < 100; i++ {
 		_, _ = st.Input.Read()
 	}
-	b.ResetTimer()
 	for b.Loop() {
 		st.Input.Slice(0, 100)
 	}
@@ -73,7 +69,6 @@ func BenchmarkReaderSlice(b *testing.B) {
 func BenchmarkReaderRemaining(b *testing.B) {
 	input := strings.Repeat("hello world\n", 1000)
 	st := NewState(NewReader(strings.NewReader(input), -1))
-	b.ResetTimer()
 	for b.Loop() {
 		b.StopTimer()
 		_ = st.Input.Rollback(Location{Index: 0, Line: 1, Col: 1})
@@ -86,7 +81,6 @@ func BenchmarkReaderRemaining(b *testing.B) {
 func BenchmarkStringP(b *testing.B) {
 	input := strings.Repeat("hello world", 100)
 	p := StringP("hello")
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -97,7 +91,6 @@ func BenchmarkStringP(b *testing.B) {
 func BenchmarkChar(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := Char('h')
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -108,7 +101,6 @@ func BenchmarkChar(b *testing.B) {
 func BenchmarkDigit(b *testing.B) {
 	input := strings.Repeat("1234567890", 100)
 	p := Digit()
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -119,7 +111,6 @@ func BenchmarkDigit(b *testing.B) {
 func BenchmarkSatisfy(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := Satisfy(func(r rune) bool { return r == 'h' }, "h")
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -130,7 +121,6 @@ func BenchmarkSatisfy(b *testing.B) {
 func BenchmarkOneOf(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := OneOf("hH")
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -141,7 +131,6 @@ func BenchmarkOneOf(b *testing.B) {
 func BenchmarkWhitespace(b *testing.B) {
 	input := strings.Repeat("   \t\n  hello world\n", 100)
 	p := Whitespace()
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -152,7 +141,6 @@ func BenchmarkWhitespace(b *testing.B) {
 func BenchmarkMany(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := Many(Char('h'))
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -163,7 +151,6 @@ func BenchmarkMany(b *testing.B) {
 func BenchmarkMany1(b *testing.B) {
 	input := strings.Repeat("1234567890", 100)
 	p := Many1(Digit())
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -174,7 +161,6 @@ func BenchmarkMany1(b *testing.B) {
 func BenchmarkChoice(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := Choice(Char('x'), Char('y'), Char('z'), Char('h'))
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -185,7 +171,6 @@ func BenchmarkChoice(b *testing.B) {
 func BenchmarkMap(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := Map(Char('h'), func(r rune) rune { return r })
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -198,7 +183,6 @@ func BenchmarkBind(b *testing.B) {
 	p := Bind(Char('h'), func(r rune) Parser[rune] {
 		return Char('e')
 	})
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -215,7 +199,6 @@ func BenchmarkSequence(b *testing.B) {
 		ToAny(Char('l')),
 		ToAny(Char('o')),
 	)
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -226,7 +209,6 @@ func BenchmarkSequence(b *testing.B) {
 func BenchmarkRegexP(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := RegexP(`hello`)
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -237,7 +219,6 @@ func BenchmarkRegexP(b *testing.B) {
 func BenchmarkRegexPComplex(b *testing.B) {
 	input := strings.Repeat("123-456-7890\n", 100)
 	p := RegexP(`\d{3}-\d{3}-\d{4}`)
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -248,7 +229,6 @@ func BenchmarkRegexPComplex(b *testing.B) {
 func BenchmarkSymbol(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := Symbol("hello")
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -259,7 +239,6 @@ func BenchmarkSymbol(b *testing.B) {
 func BenchmarkToken(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := Token(Char('h'))
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -270,7 +249,6 @@ func BenchmarkToken(b *testing.B) {
 func BenchmarkOptional(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := Optional(Char('h'))
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -281,7 +259,6 @@ func BenchmarkOptional(b *testing.B) {
 func BenchmarkSepBy(b *testing.B) {
 	input := strings.Repeat("1,2,3,4,5,6,7,8,9,0\n", 100)
 	p := SepBy(Digit(), Char(','))
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -298,7 +275,6 @@ func BenchmarkChainL(b *testing.B) {
 		Map(Token(RegexP(`\d`)), func(s string) int { return int(s[0] - '0') }),
 		addOp,
 	)
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -309,7 +285,6 @@ func BenchmarkChainL(b *testing.B) {
 func BenchmarkAttempt(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := Attempt(Char('x'))
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -320,7 +295,6 @@ func BenchmarkAttempt(b *testing.B) {
 func BenchmarkNot(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := Not(Char('x'))
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -331,7 +305,6 @@ func BenchmarkNot(b *testing.B) {
 func BenchmarkFollowedBy(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	p := FollowedBy(Char('h'))
-	b.ResetTimer()
 	for b.Loop() {
 		st := NewState(NewReader(strings.NewReader(input), -1))
 		p(st)
@@ -342,7 +315,6 @@ func BenchmarkFollowedBy(b *testing.B) {
 func BenchmarkLocationTracking(b *testing.B) {
 	input := strings.Repeat("hello world\n", 100)
 	st := NewState(NewReader(strings.NewReader(input), -1))
-	b.ResetTimer()
 	for b.Loop() {
 		b.StopTimer()
 		_ = st.Input.Rollback(Location{Index: 0, Line: 1, Col: 1})
@@ -356,7 +328,6 @@ func BenchmarkLocationTracking(b *testing.B) {
 // BenchmarkErrorCreation benchmarks ParseError creation overhead.
 func BenchmarkErrorCreation(b *testing.B) {
 	st := NewState(NewReader(strings.NewReader("test"), -1))
-	b.ResetTimer()
 	for b.Loop() {
 		failT[int]("test error", st, false, false, nil)
 	}
@@ -366,7 +337,6 @@ func BenchmarkErrorCreation(b *testing.B) {
 func BenchmarkPickBestError(b *testing.B) {
 	err1 := &ParseError{Message: "error 1", Loc: Location{Index: 5}}
 	err2 := &ParseError{Message: "error 2", Loc: Location{Index: 10}}
-	b.ResetTimer()
 	for b.Loop() {
 		_ = pickBestError(err1, err2)
 	}

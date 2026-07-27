@@ -7,7 +7,6 @@ import (
 // BenchmarkRingBufferWrite benchmarks ring buffer writes.
 func BenchmarkRingBufferWrite(b *testing.B) {
 	buf := NewRingBuffer[rune](4096)
-	b.ResetTimer()
 	for b.Loop() {
 		buf.Write('a')
 	}
@@ -19,7 +18,6 @@ func BenchmarkRingBufferRead(b *testing.B) {
 	for i := 0; i < 4096; i++ {
 		buf.Write(rune(i))
 	}
-	b.ResetTimer()
 	var i int
 	for b.Loop() {
 		buf.Read(i % 4096)
@@ -33,7 +31,6 @@ func BenchmarkRingBufferSlice(b *testing.B) {
 	for i := 0; i < 4096; i++ {
 		buf.Write(rune(i))
 	}
-	b.ResetTimer()
 	for b.Loop() {
 		buf.Slice(0, 100)
 	}
@@ -54,7 +51,6 @@ func BenchmarkRingBufferSliceWrapAround(b *testing.B) {
 	for i := 0; i < 100; i++ {
 		buf.Write(rune(i))
 	}
-	b.ResetTimer()
 	for b.Loop() {
 		buf.Slice(4000, 4100)
 	}
@@ -63,7 +59,6 @@ func BenchmarkRingBufferSliceWrapAround(b *testing.B) {
 // BenchmarkUnboundedBufferWrite benchmarks unbounded buffer writes.
 func BenchmarkUnboundedBufferWrite(b *testing.B) {
 	buf := NewUnboundedBuffer[rune]()
-	b.ResetTimer()
 	for b.Loop() {
 		buf.Write('a')
 	}
@@ -75,7 +70,6 @@ func BenchmarkUnboundedBufferRead(b *testing.B) {
 	for i := 0; i < 1000; i++ {
 		buf.Write(rune(i))
 	}
-	b.ResetTimer()
 	var i int
 	for b.Loop() {
 		buf.Read(i % 1000)
@@ -89,7 +83,6 @@ func BenchmarkUnboundedBufferSlice(b *testing.B) {
 	for i := 0; i < 1000; i++ {
 		buf.Write(rune(i))
 	}
-	b.ResetTimer()
 	for b.Loop() {
 		buf.Slice(0, 100)
 	}
@@ -98,7 +91,6 @@ func BenchmarkUnboundedBufferSlice(b *testing.B) {
 // BenchmarkRingBufferFullCycle benchmarks a full write/read cycle on a ring buffer.
 func BenchmarkRingBufferFullCycle(b *testing.B) {
 	buf := NewRingBuffer[rune](4096)
-	b.ResetTimer()
 	for b.Loop() {
 		for j := 0; j < 4096; j++ {
 			buf.Write(rune(j))
