@@ -190,7 +190,8 @@ func Choice[T any](ps ...Parser[T]) Parser[T] {
 // If any parser in the sequence fails, the entire sequence fails.
 func Sequence(ps ...Parser[any]) Parser[[]any] {
 	return func(st *State) Result[[]any] {
-		var results []any
+		// Pre-allocate with exact capacity to avoid re-allocations
+		results := make([]any, 0, len(ps))
 		currentState := st
 		consumed := false
 
@@ -308,7 +309,11 @@ func Optional[T any](p Parser[T]) Parser[*T] {
 func SepBy1[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 	return Bind(p, func(first T) Parser[[]T] {
 		return Map(Many(Right(sep, p)), func(rest []T) []T {
-			return append([]T{first}, rest...)
+			// Pre-allocate with exact capacity to avoid re-allocation
+			out := make([]T, 0, len(rest)+1)
+			out = append(out, first)
+			out = append(out, rest...)
+			return out
 		})
 	})
 }
