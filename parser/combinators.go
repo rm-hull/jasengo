@@ -261,8 +261,9 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 // It collects all successful results into a slice.
 // It fails if `p` does not succeed at least once.
 func Many1[T any](p Parser[T]) Parser[[]T] {
+	manyP := Many(p) // Hoist Many(p) out of the closure to avoid recreating it on every invocation
 	return func(st *State) Result[[]T] {
-		r := Many(p)(st)
+		r := manyP(st)
 		if r.Error != nil {
 			return r
 		}

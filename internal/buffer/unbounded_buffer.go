@@ -8,7 +8,11 @@ type UnboundedBuffer[T any] struct {
 // NewUnboundedBuffer creates a new UnboundedBuffer.
 func NewUnboundedBuffer[T any]() *UnboundedBuffer[T] {
 	return &UnboundedBuffer[T]{
-		buffer: make([]T, 0),
+		// Pre-allocate a reasonable initial capacity to reduce geometric growth
+		// reallocations during the reader's pre-fill phase. The buffer grows
+		// beyond this if needed, but starting with capacity avoids ~10
+		// intermediate allocations for typical small-to-medium inputs.
+		buffer: make([]T, 0, 512),
 	}
 }
 
@@ -24,6 +28,13 @@ func (ub *UnboundedBuffer[T]) Read(absIndex int) (T, bool) {
 		return *new(T), false
 	}
 	return ub.buffer[absIndex], true
+}
+
+// Buffer returns the underlying slice of the unbounded buffer.
+// This allows callers to create strings directly from the buffer
+// without the intermediate []T allocation that Slice + string() incurs.
+func (ub *UnboundedBuffer[T]) Buffer() []T {
+	return ub.buffer
 }
 
 // Slice returns a copy of elements in the half-open range [from, to).
