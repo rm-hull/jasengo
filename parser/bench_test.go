@@ -49,9 +49,9 @@ func BenchmarkReaderCheckpointRollback(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		checkpoint := st.Input.Checkpoint()
 		for j := 0; j < 10; j++ {
-			st.Input.Read()
+			_, _ = st.Input.Read()
 		}
-		st.Input.Rollback(checkpoint)
+		_ = st.Input.Rollback(checkpoint)
 	}
 }
 
@@ -61,7 +61,7 @@ func BenchmarkReaderSlice(b *testing.B) {
 	st := NewState(NewReader(strings.NewReader(input), -1))
 	// Read some input first
 	for i := 0; i < 100; i++ {
-		st.Input.Read()
+		_, _ = st.Input.Read()
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -76,7 +76,7 @@ func BenchmarkReaderRemaining(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
-		st.Input.Rollback(Location{Index: 0, Line: 1, Col: 1})
+		_ = st.Input.Rollback(Location{Index: 0, Line: 1, Col: 1})
 		b.StartTimer()
 		st.Remaining()
 	}
@@ -345,10 +345,10 @@ func BenchmarkLocationTracking(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
-		st.Input.Rollback(Location{Index: 0, Line: 1, Col: 1})
+		_ = st.Input.Rollback(Location{Index: 0, Line: 1, Col: 1})
 		b.StartTimer()
 		for j := 0; j < 100; j++ {
-			st.Input.Read()
+			_, _ = st.Input.Read()
 		}
 	}
 }
@@ -368,7 +368,7 @@ func BenchmarkPickBestError(b *testing.B) {
 	err2 := &ParseError{Message: "error 2", Loc: Location{Index: 10}}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		pickBestError(err1, err2)
+		_ = pickBestError(err1, err2)
 	}
 }
 

@@ -13,7 +13,7 @@ func BenchmarkSyslogParse(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		st := parser.NewState(parser.NewReader(strings.NewReader(input), -1))
-		syslogP(st)
+		_ = syslogP(st)
 	}
 }
 
@@ -25,9 +25,9 @@ Jun 14 15:16:02 combo sshd(pam_unix)[19937]: authentication failure; logname= ui
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		st := parser.NewState(parser.NewReader(strings.NewReader(input), -1))
-		syslogP(st)
-		syslogP(st)
-		syslogP(st)
+		_ = syslogP(st)
+		_ = syslogP(st)
+		_ = syslogP(st)
 	}
 }
 
@@ -36,7 +36,7 @@ func BenchmarkEvaluateExpr(b *testing.B) {
 	input := "1 + 2 * 3 - 4 / 2"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		parser.Run(expr, input)
+		_, _, _ = parser.Run(expr, input)
 	}
 }
 
@@ -45,7 +45,7 @@ func BenchmarkEvaluateExprComplex(b *testing.B) {
 	input := "1 + 2 - 3 * 4 / 2 + 5 * 6 - 7"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		parser.Run(expr, input)
+		_, _, _ = parser.Run(expr, input)
 	}
 }
 
@@ -54,7 +54,7 @@ func BenchmarkParseAttributes(b *testing.B) {
 	input := "logname=john uid=1000 euid=1000 tty=/dev/pts/0 ruser= rhost=localhost user=john"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		parser.Run(attributesP, input)
+		_, _, _ = parser.Run(attributesP, input)
 	}
 }
 
@@ -63,6 +63,6 @@ func BenchmarkParseDates(b *testing.B) {
 	input := "Jun 14 15:16:01"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		parser.Run(dateTimeP, input)
+		_, _, _ = parser.Run(dateTimeP, input)
 	}
 }
