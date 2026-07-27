@@ -97,16 +97,37 @@ func (rr *runeReader) Read() (rune, error) {
 				// when the caller tries to read past the available buffer.
 				break
 			}
-			rr.buffer.Write(r)
+			switch buf := rr.buffer.(type) {
+			case *buffer.RingBuffer[rune]:
+				buf.Write(r)
+			case *buffer.UnboundedBuffer[rune]:
+				buf.Write(r)
+			default:
+				rr.buffer.Write(r)
+			}
 			rr.bufferEnd++
 		}
 	}
 
 	// If the buffer already contains the rune at the current absolute index,
-	// read it directly from the buffer.
-	if r, ok := rr.buffer.Read(rr.loc.Index); ok {
-		rr.advanceLocation(r)
-		return r, nil
+	// read it directly from the buffer. Use a type switch to allow the
+	// compiler to devirtualize and inline the buffer access.
+	switch buf := rr.buffer.(type) {
+	case *buffer.RingBuffer[rune]:
+		if r, ok := buf.Read(rr.loc.Index); ok {
+			rr.advanceLocation(r)
+			return r, nil
+		}
+	case *buffer.UnboundedBuffer[rune]:
+		if r, ok := buf.Read(rr.loc.Index); ok {
+			rr.advanceLocation(r)
+			return r, nil
+		}
+	default:
+		if r, ok := rr.buffer.Read(rr.loc.Index); ok {
+			rr.advanceLocation(r)
+			return r, nil
+		}
 	}
 
 	// If the buffer is exhausted after a replenishment attempt, the end of the
@@ -116,7 +137,14 @@ func (rr *runeReader) Read() (rune, error) {
 	if err != nil {
 		return 0, err
 	}
-	rr.buffer.Write(r)
+	switch buf := rr.buffer.(type) {
+	case *buffer.RingBuffer[rune]:
+		buf.Write(r)
+	case *buffer.UnboundedBuffer[rune]:
+		buf.Write(r)
+	default:
+		rr.buffer.Write(r)
+	}
 	rr.bufferEnd++
 	rr.advanceLocation(r)
 	return r, nil
