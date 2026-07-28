@@ -47,7 +47,7 @@ func (ub *UnboundedBuffer[T]) Slice(from, to int) []T {
 		to = len(ub.buffer)
 	}
 	if from >= to {
-		return []T{}
+		return nil
 	}
 	out := make([]T, to-from)
 	copy(out, ub.buffer[from:to])
