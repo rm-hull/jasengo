@@ -39,7 +39,12 @@ type runeReader struct {
 // NewReader creates a new Reader from an io.Reader.
 func NewReader(r io.Reader, limit int) Reader {
 	rr := &runeReader{
-		reader: bufio.NewReader(r),
+		// Use a smaller bufio buffer (512 bytes) instead of the default 4096.
+		// The runeReader maintains its own rune buffer for lookahead, so the
+		// bufio buffer only needs to be large enough to amortize syscall overhead
+		// during pre-fill and replenishment. This reduces the per-reader allocation
+		// from 4096 bytes to 512 bytes.
+		reader: bufio.NewReaderSize(r, 512),
 		loc:    Location{Index: 0, Line: 1, Col: 1}, // Initialize location
 		limit:  limit,
 	}
@@ -163,7 +168,29 @@ func (rr *runeReader) advanceLocation(r rune) {
 // Slice returns a string slice of the runes that have been read so far between
 // the 'from' and 'to' positions.
 func (rr *runeReader) Slice(from, to int) string {
-	return string(rr.buffer.Slice(from, to))
+	// Use a type switch to allow the compiler to devirtualize and inline
+	// the buffer access, and to avoid the intermediate []rune allocation
+	// that would occur via the Buffer interface's Slice method.
+	switch buf := rr.buffer.(type) {
+	case *buffer.UnboundedBuffer[rune]:
+		// Access the underlying []rune directly and convert to string in one step,
+		// avoiding the make+copy that Slice() would perform.
+		b := buf.Buffer()
+		if from < 0 {
+			from = 0
+		}
+		if to > len(b) {
+			to = len(b)
+		}
+		if from >= to {
+			return ""
+		}
+		return string(b[from:to])
+	case *buffer.RingBuffer[rune]:
+		return string(buf.Slice(from, to))
+	default:
+		return string(rr.buffer.Slice(from, to))
+	}
 }
 
 // BufferedLength returns the absolute index of the end of the buffer.
