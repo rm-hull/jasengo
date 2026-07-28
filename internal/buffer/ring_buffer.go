@@ -64,7 +64,7 @@ func (rb *RingBuffer[T]) Slice(from, to int) []T {
 		logicalTo = rb.size
 	}
 	if logicalFrom >= logicalTo {
-		return []T{}
+		return nil
 	}
 
 	count := logicalTo - logicalFrom

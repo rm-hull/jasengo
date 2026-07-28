@@ -173,21 +173,9 @@ func (rr *runeReader) Slice(from, to int) string {
 	// that would occur via the Buffer interface's Slice method.
 	switch buf := rr.buffer.(type) {
 	case *buffer.UnboundedBuffer[rune]:
-		// Access the underlying []rune directly and convert to string in one step,
-		// avoiding the make+copy that Slice() would perform.
-		b := buf.Buffer()
-		if from < 0 {
-			from = 0
-		}
-		if to > len(b) {
-			to = len(b)
-		}
-		if from >= to {
-			return ""
-		}
-		return string(b[from:to])
+		return buffer.SliceStringUnboundedBuffer(buf, from, to)
 	case *buffer.RingBuffer[rune]:
-		return string(buf.Slice(from, to))
+		return buffer.SliceStringRingBuffer(buf, from, to)
 	default:
 		return string(rr.buffer.Slice(from, to))
 	}
