@@ -107,17 +107,21 @@ func Attempt[T any](p Parser[T]) Parser[T] {
 			}
 			if err := st.Input.Rollback(checkpoint); err != nil { // Rollback reader state on non-fatal error
 				// If Rollback fails, it's a critical error as parser state is inconsistent
+				recycleError(r.Error)
 				return Result[T]{
 					Error:    err.(*ParseError).ToFatal(), // Convert the rollback error to fatal
 					State:    r.State,                     // Use the state from after the failed parse, as rollback failed
 					Consumed: r.Consumed,
 				}
 			}
-			pe := *r.Error
+			pe := getParseError()
+			pe.Message = r.Error.Message
 			pe.Loc = st.Location()
 			pe.Fatal = false
+			pe.Cause = r.Error.Cause
+			recycleError(r.Error)
 			return Result[T]{
-				Error:    &pe,
+				Error:    pe,
 				State:    st,
 				Consumed: false,
 			}
@@ -135,10 +139,14 @@ func Commit[T any](p Parser[T]) Parser[T] {
 	return func(st *State) Result[T] {
 		r := p(st)
 		if r.Error != nil {
-			pe := *r.Error
+			pe := getParseError()
+			pe.Message = r.Error.Message
+			pe.Loc = r.Error.Loc
 			pe.Fatal = true
+			pe.Cause = r.Error.Cause
+			recycleError(r.Error)
 			return Result[T]{
-				Error:    &pe,
+				Error:    pe,
 				State:    r.State,
 				Consumed: r.Consumed,
 			}
@@ -168,14 +176,24 @@ func Choice[T any](ps ...Parser[T]) Parser[T] {
 				return r
 			}
 			if err := st.Input.Rollback(checkpoint); err != nil {
+				// If Rollback fails, it's a critical error as parser state is inconsistent
+				recycleError(r.Error)
+				recycleError(best)
 				return Result[T]{
-					// If Rollback fails, it's a critical error as parser state is inconsistent
 					Error:    err.(*ParseError).ToFatal(),
 					State:    r.State,
 					Consumed: consumed || r.Consumed,
 				}
 			}
+			// pickBestError returns one of the two errors; recycle the other.
+			oldBest := best
 			best = pickBestError(best, r.Error)
+			if best != oldBest && oldBest != nil {
+				recycleError(oldBest)
+			}
+			if best != r.Error {
+				recycleError(r.Error)
+			}
 		}
 		return Result[T]{
 			Error:    best,
@@ -235,12 +253,14 @@ func Many[T any](p Parser[T]) Parser[[]T] {
 				}
 				// Non-fatal error, rollback to before this attempt.
 				if err := cur.Input.Rollback(checkpoint); err != nil {
+					recycleError(r.Error)
 					return Result[[]T]{
 						Error:    err.(*ParseError).ToFatal(),
 						State:    cur, // Use current state as rollback failed
 						Consumed: consumed,
 					}
 				}
+				recycleError(r.Error)
 				return success(out, cur, consumed)
 			}
 
@@ -290,12 +310,14 @@ func Optional[T any](p Parser[T]) Parser[*T] {
 				}
 			}
 			if err := st.Input.Rollback(checkpoint); err != nil {
+				recycleError(r.Error)
 				return Result[*T]{
 					Error:    err.(*ParseError).ToFatal(),
 					State:    r.State,
 					Consumed: r.Consumed,
 				}
 			}
+			recycleError(r.Error)
 			return success[*T](nil, st, false)
 		}
 		v := new(T)
@@ -333,6 +355,7 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 					Consumed: r.Consumed,
 				}
 			}
+			recycleError(r.Error)
 			return success([]T{}, st, false)
 		}
 
@@ -350,6 +373,7 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 						Consumed: consumed || sepResult.Consumed,
 					}
 				}
+				recycleError(sepResult.Error)
 				return success(out, cur, consumed)
 			}
 
@@ -362,6 +386,7 @@ func SepBy[T any, S any](p Parser[T], sep Parser[S]) Parser[[]T] {
 						Consumed: consumed || sepResult.Consumed || pResult.Consumed,
 					}
 				}
+				recycleError(pResult.Error)
 				return success(out, cur, consumed)
 			}
 
@@ -397,16 +422,21 @@ func ChainL[A any](p Parser[A], op Parser[func(A, A) A]) Parser[A] {
 						Consumed: consumed || opRes.Consumed,
 					}
 				}
+				recycleError(opRes.Error)
 				return success(acc, cur, consumed)
 			}
 
 			pRes := p(opRes.State)
 			if pRes.Error != nil {
 				// If op succeeded, we must find a value, otherwise it's a syntax error.
-				err := *pRes.Error
-				err.Fatal = true
+				pe := getParseError()
+				pe.Message = pRes.Error.Message
+				pe.Loc = pRes.Error.Loc
+				pe.Fatal = true
+				pe.Cause = pRes.Error.Cause
+				recycleError(pRes.Error)
 				return Result[A]{
-					Error:    &err,
+					Error:    pe,
 					State:    pRes.State,
 					Consumed: consumed || opRes.Consumed || pRes.Consumed,
 				}
@@ -454,11 +484,13 @@ func Not[T any](p Parser[T]) Parser[any] {
 		// Whether `p` succeeded or failed (non-fatally), we must rollback
 		// because `Not` is a predicate and does not consume input.
 		if err := st.Input.Rollback(checkpoint); err != nil {
+			recycleError(r.Error)
 			return Result[any]{Error: err.(*ParseError).ToFatal(), State: st}
 		}
 
 		if r.Error != nil {
 			// p failed non-fatally, so Not succeeds.
+			recycleError(r.Error)
 			return success[any](nil, st, false)
 		}
 
