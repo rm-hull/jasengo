@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787295287552,
+  "lastUpdate": 1790617976735,
   "repoUrl": "https://github.com/rm-hull/jasengo",
   "entries": {
     "jasengo benchmark": [
@@ -7896,6 +7896,1134 @@ window.BENCHMARK_DATA = {
             "value": 54,
             "unit": "allocs/op",
             "extra": "234262 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8dcb2dd768a432a751e48e820819d2fabc5771aa",
+          "message": "chore(deps): Bump mathieudutour/github-tag-action from 6.2 to 7 (#33)\n\nBumps [mathieudutour/github-tag-action](https://github.com/mathieudutour/github-tag-action) from 6.2 to 7.\n- [Release notes](https://github.com/mathieudutour/github-tag-action/releases)\n- [Changelog](https://github.com/mathieudutour/github-tag-action/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/mathieudutour/github-tag-action/compare/v6.2...v7)\n\n---\nupdated-dependencies:\n- dependency-name: mathieudutour/github-tag-action\n  dependency-version: '7'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-09-28T18:49:56+01:00",
+          "tree_id": "8bd95073fa347493e155d29dca788f7539faa0f2",
+          "url": "https://github.com/rm-hull/jasengo/commit/8dcb2dd768a432a751e48e820819d2fabc5771aa"
+        },
+        "date": 1790617975637,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkReaderRead (github.com/rm-hull/jasengo/parser)",
+            "value": 75426,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "15891 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderRead (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 75426,
+            "unit": "ns/op",
+            "extra": "15891 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderRead (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "15891 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderRead (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "15891 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderReadWithLimit (github.com/rm-hull/jasengo/parser)",
+            "value": 109295,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderReadWithLimit (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 109295,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderReadWithLimit (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderReadWithLimit (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderCheckpointRollback (github.com/rm-hull/jasengo/parser)",
+            "value": 113,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "10849045 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderCheckpointRollback (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 113,
+            "unit": "ns/op",
+            "extra": "10849045 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderCheckpointRollback (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "10849045 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderCheckpointRollback (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "10849045 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderSlice (github.com/rm-hull/jasengo/parser)",
+            "value": 437.6,
+            "unit": "ns/op\t     112 B/op\t       1 allocs/op",
+            "extra": "2731902 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderSlice (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 437.6,
+            "unit": "ns/op",
+            "extra": "2731902 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderSlice (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 112,
+            "unit": "B/op",
+            "extra": "2731902 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderSlice (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "2731902 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderRemaining (github.com/rm-hull/jasengo/parser)",
+            "value": 55605,
+            "unit": "ns/op\t   12288 B/op\t       1 allocs/op",
+            "extra": "21583 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderRemaining (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 55605,
+            "unit": "ns/op",
+            "extra": "21583 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderRemaining (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 12288,
+            "unit": "B/op",
+            "extra": "21583 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkReaderRemaining (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "21583 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStringP (github.com/rm-hull/jasengo/parser)",
+            "value": 6834,
+            "unit": "ns/op\t   11640 B/op\t       9 allocs/op",
+            "extra": "181154 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStringP (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 6834,
+            "unit": "ns/op",
+            "extra": "181154 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStringP (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11640,
+            "unit": "B/op",
+            "extra": "181154 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStringP (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 9,
+            "unit": "allocs/op",
+            "extra": "181154 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChar (github.com/rm-hull/jasengo/parser)",
+            "value": 7196,
+            "unit": "ns/op\t   11640 B/op\t       9 allocs/op",
+            "extra": "168344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChar (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 7196,
+            "unit": "ns/op",
+            "extra": "168344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChar (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11640,
+            "unit": "B/op",
+            "extra": "168344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChar (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 9,
+            "unit": "allocs/op",
+            "extra": "168344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDigit (github.com/rm-hull/jasengo/parser)",
+            "value": 6161,
+            "unit": "ns/op\t   11640 B/op\t       9 allocs/op",
+            "extra": "190606 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDigit (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 6161,
+            "unit": "ns/op",
+            "extra": "190606 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDigit (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11640,
+            "unit": "B/op",
+            "extra": "190606 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDigit (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 9,
+            "unit": "allocs/op",
+            "extra": "190606 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSatisfy (github.com/rm-hull/jasengo/parser)",
+            "value": 6996,
+            "unit": "ns/op\t   11640 B/op\t       9 allocs/op",
+            "extra": "173796 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSatisfy (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 6996,
+            "unit": "ns/op",
+            "extra": "173796 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSatisfy (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11640,
+            "unit": "B/op",
+            "extra": "173796 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSatisfy (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 9,
+            "unit": "allocs/op",
+            "extra": "173796 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOneOf (github.com/rm-hull/jasengo/parser)",
+            "value": 7199,
+            "unit": "ns/op\t   11640 B/op\t       9 allocs/op",
+            "extra": "173670 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOneOf (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 7199,
+            "unit": "ns/op",
+            "extra": "173670 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOneOf (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11640,
+            "unit": "B/op",
+            "extra": "173670 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOneOf (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 9,
+            "unit": "allocs/op",
+            "extra": "173670 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWhitespace (github.com/rm-hull/jasengo/parser)",
+            "value": 11464,
+            "unit": "ns/op\t   19912 B/op\t      14 allocs/op",
+            "extra": "101048 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWhitespace (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 11464,
+            "unit": "ns/op",
+            "extra": "101048 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWhitespace (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 19912,
+            "unit": "B/op",
+            "extra": "101048 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWhitespace (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 14,
+            "unit": "allocs/op",
+            "extra": "101048 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMany (github.com/rm-hull/jasengo/parser)",
+            "value": 7089,
+            "unit": "ns/op\t   11664 B/op\t      11 allocs/op",
+            "extra": "172374 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMany (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 7089,
+            "unit": "ns/op",
+            "extra": "172374 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMany (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11664,
+            "unit": "B/op",
+            "extra": "172374 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMany (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 11,
+            "unit": "allocs/op",
+            "extra": "172374 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMany1 (github.com/rm-hull/jasengo/parser)",
+            "value": 29810,
+            "unit": "ns/op\t   24584 B/op\t      21 allocs/op",
+            "extra": "41424 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMany1 (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 29810,
+            "unit": "ns/op",
+            "extra": "41424 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMany1 (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 24584,
+            "unit": "B/op",
+            "extra": "41424 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMany1 (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 21,
+            "unit": "allocs/op",
+            "extra": "41424 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChoice (github.com/rm-hull/jasengo/parser)",
+            "value": 7111,
+            "unit": "ns/op\t   11768 B/op\t      13 allocs/op",
+            "extra": "159915 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChoice (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 7111,
+            "unit": "ns/op",
+            "extra": "159915 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChoice (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11768,
+            "unit": "B/op",
+            "extra": "159915 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChoice (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 13,
+            "unit": "allocs/op",
+            "extra": "159915 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMap (github.com/rm-hull/jasengo/parser)",
+            "value": 6954,
+            "unit": "ns/op\t   11640 B/op\t       9 allocs/op",
+            "extra": "175972 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMap (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 6954,
+            "unit": "ns/op",
+            "extra": "175972 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMap (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11640,
+            "unit": "B/op",
+            "extra": "175972 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMap (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 9,
+            "unit": "allocs/op",
+            "extra": "175972 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBind (github.com/rm-hull/jasengo/parser)",
+            "value": 7061,
+            "unit": "ns/op\t   11704 B/op\t      13 allocs/op",
+            "extra": "171226 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBind (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 7061,
+            "unit": "ns/op",
+            "extra": "171226 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBind (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11704,
+            "unit": "B/op",
+            "extra": "171226 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBind (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 13,
+            "unit": "allocs/op",
+            "extra": "171226 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSequence (github.com/rm-hull/jasengo/parser)",
+            "value": 7156,
+            "unit": "ns/op\t   11720 B/op\t      10 allocs/op",
+            "extra": "166380 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSequence (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 7156,
+            "unit": "ns/op",
+            "extra": "166380 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSequence (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11720,
+            "unit": "B/op",
+            "extra": "166380 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSequence (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 10,
+            "unit": "allocs/op",
+            "extra": "166380 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRegexP (github.com/rm-hull/jasengo/parser)",
+            "value": 12743,
+            "unit": "ns/op\t   13030 B/op\t      11 allocs/op",
+            "extra": "80150 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRegexP (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 12743,
+            "unit": "ns/op",
+            "extra": "80150 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRegexP (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 13030,
+            "unit": "B/op",
+            "extra": "80150 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRegexP (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 11,
+            "unit": "allocs/op",
+            "extra": "80150 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRegexPComplex (github.com/rm-hull/jasengo/parser)",
+            "value": 13579,
+            "unit": "ns/op\t   13160 B/op\t      11 allocs/op",
+            "extra": "87279 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRegexPComplex (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 13579,
+            "unit": "ns/op",
+            "extra": "87279 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRegexPComplex (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 13160,
+            "unit": "B/op",
+            "extra": "87279 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRegexPComplex (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 11,
+            "unit": "allocs/op",
+            "extra": "87279 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSymbol (github.com/rm-hull/jasengo/parser)",
+            "value": 7249,
+            "unit": "ns/op\t   11736 B/op\t      13 allocs/op",
+            "extra": "162385 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSymbol (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 7249,
+            "unit": "ns/op",
+            "extra": "162385 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSymbol (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11736,
+            "unit": "B/op",
+            "extra": "162385 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSymbol (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 13,
+            "unit": "allocs/op",
+            "extra": "162385 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkToken (github.com/rm-hull/jasengo/parser)",
+            "value": 7302,
+            "unit": "ns/op\t   11720 B/op\t      12 allocs/op",
+            "extra": "160825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkToken (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 7302,
+            "unit": "ns/op",
+            "extra": "160825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkToken (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11720,
+            "unit": "B/op",
+            "extra": "160825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkToken (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 12,
+            "unit": "allocs/op",
+            "extra": "160825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOptional (github.com/rm-hull/jasengo/parser)",
+            "value": 7057,
+            "unit": "ns/op\t   11644 B/op\t      10 allocs/op",
+            "extra": "169221 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOptional (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 7057,
+            "unit": "ns/op",
+            "extra": "169221 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOptional (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11644,
+            "unit": "B/op",
+            "extra": "169221 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOptional (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 10,
+            "unit": "allocs/op",
+            "extra": "169221 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSepBy (github.com/rm-hull/jasengo/parser)",
+            "value": 12068,
+            "unit": "ns/op\t   19976 B/op\t      16 allocs/op",
+            "extra": "99238 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSepBy (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 12068,
+            "unit": "ns/op",
+            "extra": "99238 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSepBy (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 19976,
+            "unit": "B/op",
+            "extra": "99238 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSepBy (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 16,
+            "unit": "allocs/op",
+            "extra": "99238 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChainL (github.com/rm-hull/jasengo/parser)",
+            "value": 30259,
+            "unit": "ns/op\t   17786 B/op\t      50 allocs/op",
+            "extra": "39057 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChainL (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 30259,
+            "unit": "ns/op",
+            "extra": "39057 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChainL (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 17786,
+            "unit": "B/op",
+            "extra": "39057 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkChainL (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 50,
+            "unit": "allocs/op",
+            "extra": "39057 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAttempt (github.com/rm-hull/jasengo/parser)",
+            "value": 7098,
+            "unit": "ns/op\t   11736 B/op\t      11 allocs/op",
+            "extra": "171715 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAttempt (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 7098,
+            "unit": "ns/op",
+            "extra": "171715 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAttempt (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11736,
+            "unit": "B/op",
+            "extra": "171715 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAttempt (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 11,
+            "unit": "allocs/op",
+            "extra": "171715 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNot (github.com/rm-hull/jasengo/parser)",
+            "value": 7100,
+            "unit": "ns/op\t   11656 B/op\t      10 allocs/op",
+            "extra": "165423 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNot (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 7100,
+            "unit": "ns/op",
+            "extra": "165423 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNot (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11656,
+            "unit": "B/op",
+            "extra": "165423 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNot (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 10,
+            "unit": "allocs/op",
+            "extra": "165423 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkFollowedBy (github.com/rm-hull/jasengo/parser)",
+            "value": 6955,
+            "unit": "ns/op\t   11640 B/op\t       9 allocs/op",
+            "extra": "174507 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkFollowedBy (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 6955,
+            "unit": "ns/op",
+            "extra": "174507 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkFollowedBy (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 11640,
+            "unit": "B/op",
+            "extra": "174507 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkFollowedBy (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 9,
+            "unit": "allocs/op",
+            "extra": "174507 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLocationTracking (github.com/rm-hull/jasengo/parser)",
+            "value": 1857,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "595407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLocationTracking (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 1857,
+            "unit": "ns/op",
+            "extra": "595407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLocationTracking (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "595407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLocationTracking (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "595407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorCreation (github.com/rm-hull/jasengo/parser)",
+            "value": 32.43,
+            "unit": "ns/op\t      80 B/op\t       1 allocs/op",
+            "extra": "36098814 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorCreation (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 32.43,
+            "unit": "ns/op",
+            "extra": "36098814 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorCreation (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 80,
+            "unit": "B/op",
+            "extra": "36098814 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorCreation (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "36098814 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPickBestError (github.com/rm-hull/jasengo/parser)",
+            "value": 1.644,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "731458335 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPickBestError (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 1.644,
+            "unit": "ns/op",
+            "extra": "731458335 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPickBestError (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "731458335 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPickBestError (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "731458335 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAllocateResult (github.com/rm-hull/jasengo/parser)",
+            "value": 1,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAllocateResult (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 1,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAllocateResult (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAllocateResult (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAllocateState (github.com/rm-hull/jasengo/parser)",
+            "value": 1,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAllocateState (github.com/rm-hull/jasengo/parser) - ns/op",
+            "value": 1,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAllocateState (github.com/rm-hull/jasengo/parser) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAllocateState (github.com/rm-hull/jasengo/parser) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferWrite (github.com/rm-hull/jasengo/internal/buffer)",
+            "value": 3.831,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "312783309 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferWrite (github.com/rm-hull/jasengo/internal/buffer) - ns/op",
+            "value": 3.831,
+            "unit": "ns/op",
+            "extra": "312783309 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferWrite (github.com/rm-hull/jasengo/internal/buffer) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "312783309 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferWrite (github.com/rm-hull/jasengo/internal/buffer) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "312783309 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferRead (github.com/rm-hull/jasengo/internal/buffer)",
+            "value": 2.458,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "488343136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferRead (github.com/rm-hull/jasengo/internal/buffer) - ns/op",
+            "value": 2.458,
+            "unit": "ns/op",
+            "extra": "488343136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferRead (github.com/rm-hull/jasengo/internal/buffer) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "488343136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferRead (github.com/rm-hull/jasengo/internal/buffer) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "488343136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferSlice (github.com/rm-hull/jasengo/internal/buffer)",
+            "value": 75.14,
+            "unit": "ns/op\t     416 B/op\t       1 allocs/op",
+            "extra": "15798819 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferSlice (github.com/rm-hull/jasengo/internal/buffer) - ns/op",
+            "value": 75.14,
+            "unit": "ns/op",
+            "extra": "15798819 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferSlice (github.com/rm-hull/jasengo/internal/buffer) - B/op",
+            "value": 416,
+            "unit": "B/op",
+            "extra": "15798819 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferSlice (github.com/rm-hull/jasengo/internal/buffer) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "15798819 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferSliceWrapAround (github.com/rm-hull/jasengo/internal/buffer)",
+            "value": 76.84,
+            "unit": "ns/op\t     416 B/op\t       1 allocs/op",
+            "extra": "15147879 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferSliceWrapAround (github.com/rm-hull/jasengo/internal/buffer) - ns/op",
+            "value": 76.84,
+            "unit": "ns/op",
+            "extra": "15147879 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferSliceWrapAround (github.com/rm-hull/jasengo/internal/buffer) - B/op",
+            "value": 416,
+            "unit": "B/op",
+            "extra": "15147879 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferSliceWrapAround (github.com/rm-hull/jasengo/internal/buffer) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "15147879 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferWrite (github.com/rm-hull/jasengo/internal/buffer)",
+            "value": 3.127,
+            "unit": "ns/op\t      24 B/op\t       0 allocs/op",
+            "extra": "372697220 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferWrite (github.com/rm-hull/jasengo/internal/buffer) - ns/op",
+            "value": 3.127,
+            "unit": "ns/op",
+            "extra": "372697220 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferWrite (github.com/rm-hull/jasengo/internal/buffer) - B/op",
+            "value": 24,
+            "unit": "B/op",
+            "extra": "372697220 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferWrite (github.com/rm-hull/jasengo/internal/buffer) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "372697220 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferRead (github.com/rm-hull/jasengo/internal/buffer)",
+            "value": 1.641,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "730856728 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferRead (github.com/rm-hull/jasengo/internal/buffer) - ns/op",
+            "value": 1.641,
+            "unit": "ns/op",
+            "extra": "730856728 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferRead (github.com/rm-hull/jasengo/internal/buffer) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "730856728 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferRead (github.com/rm-hull/jasengo/internal/buffer) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "730856728 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferSlice (github.com/rm-hull/jasengo/internal/buffer)",
+            "value": 87.49,
+            "unit": "ns/op\t     416 B/op\t       1 allocs/op",
+            "extra": "13265217 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferSlice (github.com/rm-hull/jasengo/internal/buffer) - ns/op",
+            "value": 87.49,
+            "unit": "ns/op",
+            "extra": "13265217 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferSlice (github.com/rm-hull/jasengo/internal/buffer) - B/op",
+            "value": 416,
+            "unit": "B/op",
+            "extra": "13265217 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUnboundedBufferSlice (github.com/rm-hull/jasengo/internal/buffer) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "13265217 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferFullCycle (github.com/rm-hull/jasengo/internal/buffer)",
+            "value": 24785,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "47793 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferFullCycle (github.com/rm-hull/jasengo/internal/buffer) - ns/op",
+            "value": 24785,
+            "unit": "ns/op",
+            "extra": "47793 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferFullCycle (github.com/rm-hull/jasengo/internal/buffer) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "47793 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRingBufferFullCycle (github.com/rm-hull/jasengo/internal/buffer) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "47793 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSyslogParse (github.com/rm-hull/jasengo/parser_test)",
+            "value": 41845,
+            "unit": "ns/op\t   18418 B/op\t     619 allocs/op",
+            "extra": "28551 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSyslogParse (github.com/rm-hull/jasengo/parser_test) - ns/op",
+            "value": 41845,
+            "unit": "ns/op",
+            "extra": "28551 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSyslogParse (github.com/rm-hull/jasengo/parser_test) - B/op",
+            "value": 18418,
+            "unit": "B/op",
+            "extra": "28551 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSyslogParse (github.com/rm-hull/jasengo/parser_test) - allocs/op",
+            "value": 619,
+            "unit": "allocs/op",
+            "extra": "28551 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSyslogMultipleLines (github.com/rm-hull/jasengo/parser_test)",
+            "value": 119583,
+            "unit": "ns/op\t   45853 B/op\t    1674 allocs/op",
+            "extra": "9798 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSyslogMultipleLines (github.com/rm-hull/jasengo/parser_test) - ns/op",
+            "value": 119583,
+            "unit": "ns/op",
+            "extra": "9798 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSyslogMultipleLines (github.com/rm-hull/jasengo/parser_test) - B/op",
+            "value": 45853,
+            "unit": "B/op",
+            "extra": "9798 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSyslogMultipleLines (github.com/rm-hull/jasengo/parser_test) - allocs/op",
+            "value": 1674,
+            "unit": "allocs/op",
+            "extra": "9798 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkEvaluateExpr (github.com/rm-hull/jasengo/parser_test)",
+            "value": 4833,
+            "unit": "ns/op\t    4408 B/op\t      85 allocs/op",
+            "extra": "256132 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkEvaluateExpr (github.com/rm-hull/jasengo/parser_test) - ns/op",
+            "value": 4833,
+            "unit": "ns/op",
+            "extra": "256132 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkEvaluateExpr (github.com/rm-hull/jasengo/parser_test) - B/op",
+            "value": 4408,
+            "unit": "B/op",
+            "extra": "256132 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkEvaluateExpr (github.com/rm-hull/jasengo/parser_test) - allocs/op",
+            "value": 85,
+            "unit": "allocs/op",
+            "extra": "256132 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkEvaluateExprComplex (github.com/rm-hull/jasengo/parser_test)",
+            "value": 7105,
+            "unit": "ns/op\t    5336 B/op\t     131 allocs/op",
+            "extra": "166826 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkEvaluateExprComplex (github.com/rm-hull/jasengo/parser_test) - ns/op",
+            "value": 7105,
+            "unit": "ns/op",
+            "extra": "166826 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkEvaluateExprComplex (github.com/rm-hull/jasengo/parser_test) - B/op",
+            "value": 5336,
+            "unit": "B/op",
+            "extra": "166826 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkEvaluateExprComplex (github.com/rm-hull/jasengo/parser_test) - allocs/op",
+            "value": 131,
+            "unit": "allocs/op",
+            "extra": "166826 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseAttributes (github.com/rm-hull/jasengo/parser_test)",
+            "value": 7700,
+            "unit": "ns/op\t    5712 B/op\t     122 allocs/op",
+            "extra": "156594 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseAttributes (github.com/rm-hull/jasengo/parser_test) - ns/op",
+            "value": 7700,
+            "unit": "ns/op",
+            "extra": "156594 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseAttributes (github.com/rm-hull/jasengo/parser_test) - B/op",
+            "value": 5712,
+            "unit": "B/op",
+            "extra": "156594 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseAttributes (github.com/rm-hull/jasengo/parser_test) - allocs/op",
+            "value": 122,
+            "unit": "allocs/op",
+            "extra": "156594 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseDates (github.com/rm-hull/jasengo/parser_test)",
+            "value": 3742,
+            "unit": "ns/op\t    3941 B/op\t      54 allocs/op",
+            "extra": "329089 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseDates (github.com/rm-hull/jasengo/parser_test) - ns/op",
+            "value": 3742,
+            "unit": "ns/op",
+            "extra": "329089 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseDates (github.com/rm-hull/jasengo/parser_test) - B/op",
+            "value": 3941,
+            "unit": "B/op",
+            "extra": "329089 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseDates (github.com/rm-hull/jasengo/parser_test) - allocs/op",
+            "value": 54,
+            "unit": "allocs/op",
+            "extra": "329089 times\n4 procs"
           }
         ]
       }
